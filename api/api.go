@@ -52,6 +52,10 @@ func (s *Server) createURL(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid time format"})
 		return
 	}
+	if expireAt.Before(time.Now()) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "expireAt is in the past"})
+		return
+	}
 	var urlID string
 	urlID, err = s.shortenSrv.Shorten(createURLRequest.URL, expireAt)
 	if err != nil {
