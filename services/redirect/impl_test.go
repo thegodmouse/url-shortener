@@ -144,26 +144,3 @@ func (s *RedirectTestSuite) TestRedirectTo_withURLNotFound() {
 	s.Error(gotErr)
 	s.Empty(gotURL)
 }
-
-func (s *RedirectTestSuite) TestRedirectTo_withConverULR() {
-	srv := NewService(s.mockDB, s.mockCache)
-
-	urlID := "12345"
-
-	id, _ := util.ConvertToID(urlID)
-
-	s.mockCache.
-		EXPECT().
-		Get(gomock.Any(), urlID).
-		Return(nil, cache.ErrKeyNotFound)
-	s.mockDB.
-		EXPECT().
-		Get(gomock.Any(), id).
-		Return(nil, db.ErrNoRows)
-
-	// SUT
-	gotURL, gotErr := srv.RedirectTo(context.Background(), urlID)
-
-	s.Error(gotErr)
-	s.Empty(gotURL)
-}
