@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/thegodmouse/url-shortener/db"
-	"github.com/thegodmouse/url-shortener/util"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -15,9 +13,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"github.com/thegodmouse/url-shortener/db"
 	"github.com/thegodmouse/url-shortener/dto"
 	mr "github.com/thegodmouse/url-shortener/services/redirect/mock"
 	ms "github.com/thegodmouse/url-shortener/services/shortener/mock"
+	"github.com/thegodmouse/url-shortener/util"
 )
 
 func TestAPI(t *testing.T) {
@@ -94,12 +94,6 @@ func (s *APITestSuite) TestCreateURL_withBadRequest() {
 		},
 	}
 	for _, testCase := range testCases {
-		/*expectShortURL := s.hostname + "/" + testCase.urlID
-		s.mockShortener.
-			EXPECT().
-			Shorten(gomock.Any(), gomock.Eq(testCase.url), gomock.Eq(testCase.expireAt)).
-			Return(testCase.urlID, nil)
-		*/
 		// create test context
 		w := httptest.NewRecorder()
 		ctx, _ := gin.CreateTestContext(w)
@@ -266,11 +260,4 @@ func (s *APITestSuite) TestRedirectURL_withRedirectError() {
 
 		s.Equal(testCase.expCode, w.Code)
 	}
-}
-
-func (s *APITestSuite) toJsonBody(data interface{}) io.Reader {
-	buf := new(bytes.Buffer)
-	bs, _ := json.Marshal(data)
-	buf.Write(bs)
-	return buf
 }
