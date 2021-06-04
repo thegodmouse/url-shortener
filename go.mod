@@ -7,5 +7,6 @@ require (
 	github.com/go-redis/redis/v8 v8.9.0
 	github.com/golang/mock v1.5.0
 	github.com/json-iterator/go v1.1.11 // indirect
+	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 )
