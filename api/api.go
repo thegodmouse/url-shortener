@@ -6,9 +6,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/thegodmouse/url-shortener/db"
 	"github.com/thegodmouse/url-shortener/dto"
 	"github.com/thegodmouse/url-shortener/services/redirect"
 	"github.com/thegodmouse/url-shortener/services/shortener"
+	"github.com/thegodmouse/url-shortener/util"
 )
 
 const (
@@ -57,7 +59,7 @@ func (s *Server) createURL(ctx *gin.Context) {
 		return
 	}
 	var urlID string
-	urlID, err = s.shortenSrv.Shorten(createURLRequest.URL, expireAt)
+	urlID, err = s.shortenSrv.Shorten(ctx, createURLRequest.URL, expireAt)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
 		return
@@ -68,20 +70,36 @@ func (s *Server) createURL(ctx *gin.Context) {
 	})
 }
 
+// deleteURL deletes a short url in the db.
 func (s *Server) deleteURL(ctx *gin.Context) {
 	urlID := ctx.Param("url_id")
-	if err := s.shortenSrv.Delete(urlID); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+	if err := s.shortenSrv.Delete(ctx, urlID); err != nil {
+		switch err {
+		case util.ErrURLFormat:
+			ctx.JSON(http.StatusBadRequest, gin.H{"message": "url_id is in wrong format"})
+		case db.ErrNoRows:
+			ctx.JSON(http.StatusNotFound, gin.H{"message": "requested url_id not found"})
+		default:
+			ctx.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		}
 		return
 	}
-	ctx.Status(http.StatusNoContent)
+	ctx.JSON(http.StatusNoContent, nil)
 }
 
+// redirectURL redirects a short url to its original url.
 func (s *Server) redirectURL(ctx *gin.Context) {
 	urlID := ctx.Param("url_id")
-	location, err := s.redirectSrv.RedirectTo(urlID)
+	location, err := s.redirectSrv.RedirectTo(ctx, urlID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		switch err {
+		case util.ErrURLFormat:
+			ctx.JSON(http.StatusBadRequest, gin.H{"message": "url_id is in wrong format"})
+		case db.ErrNoRows:
+			ctx.JSON(http.StatusNotFound, gin.H{"message": "requested url_id not found"})
+		default:
+			ctx.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		}
 		return
 	}
 	ctx.Redirect(http.StatusSeeOther, location)

@@ -2,9 +2,14 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/thegodmouse/url-shortener/db/record"
+)
+
+var (
+	ErrNoRows = sql.ErrNoRows
 )
 
 type Store interface {

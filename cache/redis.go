@@ -2,10 +2,10 @@ package cache
 
 import (
 	"context"
-	"github.com/thegodmouse/url-shortener/db/record"
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/thegodmouse/url-shortener/db/record"
 )
 
 const (
@@ -25,11 +25,11 @@ type redisCache struct {
 }
 
 func (r *redisCache) Get(ctx context.Context, urlID string) (*record.ShortURL, error) {
-	var record *record.ShortURL
-	if err := r.client.Get(ctx, r.makeKey(urlID)).Scan(record); err != nil {
+	var shortURL *record.ShortURL
+	if err := r.client.Get(ctx, r.makeKey(urlID)).Scan(shortURL); err != nil {
 		return nil, err
 	}
-	return record, nil
+	return shortURL, nil
 }
 
 func (r *redisCache) Set(ctx context.Context, urlID string, record *record.ShortURL) error {
