@@ -8,6 +8,10 @@ import (
 	"github.com/thegodmouse/url-shortener/db/record"
 )
 
+var (
+	ErrKeyNotFound = redis.Nil
+)
+
 const (
 	defaultExpiration = 10 * time.Minute
 )
