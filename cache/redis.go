@@ -16,9 +16,13 @@ const (
 	defaultExpiration = 10 * time.Minute
 )
 
-func NewRedisStore(options *redis.Options) *redisCache {
+func NewRedisStore(addr string, password string) *redisCache {
 	return &redisCache{
-		client:     redis.NewClient(options),
+		client: redis.NewClient(&redis.Options{
+			Addr:     addr,
+			Password: password,
+			DB:       0, // use default DB
+		}),
 		expiration: defaultExpiration,
 	}
 }
