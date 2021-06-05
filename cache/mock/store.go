@@ -36,44 +36,44 @@ func (m *MockStore) EXPECT() *MockStoreMockRecorder {
 }
 
 // Evict mocks base method.
-func (m *MockStore) Evict(ctx context.Context, urlID string) error {
+func (m *MockStore) Evict(ctx context.Context, id int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Evict", ctx, urlID)
+	ret := m.ctrl.Call(m, "Evict", ctx, id)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Evict indicates an expected call of Evict.
-func (mr *MockStoreMockRecorder) Evict(ctx, urlID interface{}) *gomock.Call {
+func (mr *MockStoreMockRecorder) Evict(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Evict", reflect.TypeOf((*MockStore)(nil).Evict), ctx, urlID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Evict", reflect.TypeOf((*MockStore)(nil).Evict), ctx, id)
 }
 
 // Get mocks base method.
-func (m *MockStore) Get(ctx context.Context, urlID string) (*record.ShortURL, error) {
+func (m *MockStore) Get(ctx context.Context, id int64) (*record.ShortURL, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", ctx, urlID)
+	ret := m.ctrl.Call(m, "Get", ctx, id)
 	ret0, _ := ret[0].(*record.ShortURL)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockStoreMockRecorder) Get(ctx, urlID interface{}) *gomock.Call {
+func (mr *MockStoreMockRecorder) Get(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockStore)(nil).Get), ctx, urlID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockStore)(nil).Get), ctx, id)
 }
 
 // Set mocks base method.
-func (m *MockStore) Set(ctx context.Context, urlID string, record *record.ShortURL) error {
+func (m *MockStore) Set(ctx context.Context, id int64, record *record.ShortURL) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Set", ctx, urlID, record)
+	ret := m.ctrl.Call(m, "Set", ctx, id, record)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Set indicates an expected call of Set.
-func (mr *MockStoreMockRecorder) Set(ctx, urlID, record interface{}) *gomock.Call {
+func (mr *MockStoreMockRecorder) Set(ctx, id, record interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockStore)(nil).Set), ctx, urlID, record)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockStore)(nil).Set), ctx, id, record)
 }

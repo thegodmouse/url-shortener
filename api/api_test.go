@@ -13,7 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	"github.com/thegodmouse/url-shortener/converter"
+	mcv "github.com/thegodmouse/url-shortener/converter/mock"
 	"github.com/thegodmouse/url-shortener/db"
 	"github.com/thegodmouse/url-shortener/dto"
 	mr "github.com/thegodmouse/url-shortener/services/redirect/mock"
@@ -31,6 +31,7 @@ type APITestSuite struct {
 
 	mockShortener *ms.MockService
 	mockRedirect  *mr.MockService
+	mockConv      *mcv.MockConverter
 	hostname      string
 }
 
@@ -42,19 +43,24 @@ func (s *APITestSuite) SetupSuite() {
 func (s *APITestSuite) SetupTest() {
 	s.mockShortener = ms.NewMockService(s.ctrl)
 	s.mockRedirect = mr.NewMockService(s.ctrl)
+	s.mockConv = mcv.NewMockConverter(s.ctrl)
 }
 
 func (s *APITestSuite) TestCreateURL() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect)
+	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
 
 	url := "http://localhost:7788"
 	expireAt := time.Now().Add(time.Minute).Round(time.Second)
-
+	id := int64(12345)
 	urlID := "12345"
 	expectShortURL := s.hostname + "/" + urlID
 	s.mockShortener.
 		EXPECT().
 		Shorten(gomock.Any(), gomock.Eq(url), gomock.Eq(expireAt)).
+		Return(id, nil)
+	s.mockConv.
+		EXPECT().
+		ConvertToShortURL(gomock.Eq(id)).
 		Return(urlID, nil)
 
 	// create test context
@@ -72,7 +78,7 @@ func (s *APITestSuite) TestCreateURL() {
 }
 
 func (s *APITestSuite) TestCreateURL_withBadRequest() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect)
+	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
 
 	testCases := []struct {
 		body io.Reader
@@ -106,16 +112,15 @@ func (s *APITestSuite) TestCreateURL_withBadRequest() {
 }
 
 func (s *APITestSuite) TestCreateURL_withShortenerError() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect)
+	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
 
 	url := "http://localhost:7788"
 	expireAt := time.Now().Add(time.Minute).Round(time.Second)
 
-	expErr := errors.New("unexpected error")
 	s.mockShortener.
 		EXPECT().
 		Shorten(gomock.Any(), gomock.Eq(url), gomock.Eq(expireAt)).
-		Return("", expErr)
+		Return(int64(0), errors.New("unknown shortener error"))
 
 	// create test context
 	w := httptest.NewRecorder()
@@ -139,12 +144,18 @@ func (s *APITestSuite) makeTestCreateURLRequestBody(url string, expireAt time.Ti
 }
 
 func (s *APITestSuite) TestDeleteURL() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect)
+	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
 
+	id := int64(12345)
 	urlID := "12345"
+
+	s.mockConv.
+		EXPECT().
+		ConvertToID(gomock.Eq(urlID)).
+		Return(id, nil)
 	s.mockShortener.
 		EXPECT().
-		Delete(gomock.Any(), gomock.Eq(urlID)).
+		Delete(gomock.Any(), gomock.Eq(id)).
 		Return(nil)
 
 	// create test context
@@ -159,33 +170,35 @@ func (s *APITestSuite) TestDeleteURL() {
 }
 
 func (s *APITestSuite) TestDeleteURL_withShortenerError() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect)
+	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
 
 	testCases := []struct {
+		id           int64
 		urlID        string
 		shortenerErr error
 		expCode      int
 	}{
 		{
+			id:           int64(123),
 			urlID:        "123",
 			shortenerErr: db.ErrNoRows,
 			expCode:      http.StatusNotFound,
 		},
 		{
-			urlID:        "456",
-			shortenerErr: converter.ErrURLFormat,
-			expCode:      http.StatusBadRequest,
-		},
-		{
+			id:           int64(789),
 			urlID:        "789",
 			shortenerErr: errors.New("unexpected error"),
 			expCode:      http.StatusInternalServerError,
 		},
 	}
 	for _, testCase := range testCases {
+		s.mockConv.
+			EXPECT().
+			ConvertToID(gomock.Eq(testCase.urlID)).
+			Return(testCase.id, nil)
 		s.mockShortener.
 			EXPECT().
-			Delete(gomock.Any(), gomock.Eq(testCase.urlID)).
+			Delete(gomock.Any(), gomock.Eq(testCase.id)).
 			Return(testCase.shortenerErr)
 
 		// create test context
@@ -201,13 +214,18 @@ func (s *APITestSuite) TestDeleteURL_withShortenerError() {
 }
 
 func (s *APITestSuite) TestRedirectURL() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect)
+	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
 
+	id := int64(12345)
 	urlID := "12345"
 	redirectURL := "http://localhost:7788"
+	s.mockConv.
+		EXPECT().
+		ConvertToID(gomock.Eq(urlID)).
+		Return(id, nil)
 	s.mockRedirect.
 		EXPECT().
-		RedirectTo(gomock.Any(), gomock.Eq(urlID)).
+		RedirectTo(gomock.Any(), gomock.Eq(id)).
 		Return(redirectURL, nil)
 
 	w := httptest.NewRecorder()
@@ -222,33 +240,35 @@ func (s *APITestSuite) TestRedirectURL() {
 }
 
 func (s *APITestSuite) TestRedirectURL_withRedirectError() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect)
+	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
 
 	testCases := []struct {
+		id          int64
 		urlID       string
 		redirectErr error
 		expCode     int
 	}{
 		{
+			id:          int64(123),
 			urlID:       "123",
 			redirectErr: db.ErrNoRows,
 			expCode:     http.StatusNotFound,
 		},
 		{
-			urlID:       "456",
-			redirectErr: converter.ErrURLFormat,
-			expCode:     http.StatusBadRequest,
-		},
-		{
+			id:          int64(789),
 			urlID:       "789",
 			redirectErr: errors.New("unexpected error"),
 			expCode:     http.StatusInternalServerError,
 		},
 	}
 	for _, testCase := range testCases {
+		s.mockConv.
+			EXPECT().
+			ConvertToID(gomock.Eq(testCase.urlID)).
+			Return(testCase.id, nil)
 		s.mockRedirect.
 			EXPECT().
-			RedirectTo(gomock.Any(), gomock.Eq(testCase.urlID)).
+			RedirectTo(gomock.Any(), gomock.Eq(testCase.id)).
 			Return("", testCase.redirectErr)
 
 		w := httptest.NewRecorder()

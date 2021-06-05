@@ -36,24 +36,24 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 }
 
 // Delete mocks base method.
-func (m *MockService) Delete(ctx context.Context, urlID string) error {
+func (m *MockService) Delete(ctx context.Context, id int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", ctx, urlID)
+	ret := m.ctrl.Call(m, "Delete", ctx, id)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Delete indicates an expected call of Delete.
-func (mr *MockServiceMockRecorder) Delete(ctx, urlID interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) Delete(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockService)(nil).Delete), ctx, urlID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockService)(nil).Delete), ctx, id)
 }
 
 // Shorten mocks base method.
-func (m *MockService) Shorten(ctx context.Context, url string, expireAt time.Time) (string, error) {
+func (m *MockService) Shorten(ctx context.Context, url string, expireAt time.Time) (int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Shorten", ctx, url, expireAt)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

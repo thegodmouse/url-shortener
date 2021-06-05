@@ -5,5 +5,5 @@ import (
 )
 
 type Service interface {
-	RedirectTo(ctx context.Context, urlID string) (string, error)
+	RedirectTo(ctx context.Context, id int64) (string, error)
 }

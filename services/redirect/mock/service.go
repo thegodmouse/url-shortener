@@ -35,16 +35,16 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 }
 
 // RedirectTo mocks base method.
-func (m *MockService) RedirectTo(ctx context.Context, urlID string) (string, error) {
+func (m *MockService) RedirectTo(ctx context.Context, id int64) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RedirectTo", ctx, urlID)
+	ret := m.ctrl.Call(m, "RedirectTo", ctx, id)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RedirectTo indicates an expected call of RedirectTo.
-func (mr *MockServiceMockRecorder) RedirectTo(ctx, urlID interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) RedirectTo(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RedirectTo", reflect.TypeOf((*MockService)(nil).RedirectTo), ctx, urlID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RedirectTo", reflect.TypeOf((*MockService)(nil).RedirectTo), ctx, id)
 }

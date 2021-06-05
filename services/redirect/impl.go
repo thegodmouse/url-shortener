@@ -5,29 +5,26 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/thegodmouse/url-shortener/cache"
-	"github.com/thegodmouse/url-shortener/converter"
 	"github.com/thegodmouse/url-shortener/db"
 	"github.com/thegodmouse/url-shortener/db/record"
 	"github.com/thegodmouse/url-shortener/util"
 )
 
-func NewService(dbStore db.Store, cacheStore cache.Store, conv converter.Converter) *serviceImpl {
+func NewService(dbStore db.Store, cacheStore cache.Store) *serviceImpl {
 	return &serviceImpl{
 		dbStore:    dbStore,
 		cacheStore: cacheStore,
-		conv:       conv,
 	}
 }
 
 type serviceImpl struct {
 	dbStore    db.Store
 	cacheStore cache.Store
-	conv       converter.Converter
 }
 
 // RedirectTo returns the original url of the urlID if exists.
-func (s *serviceImpl) RedirectTo(ctx context.Context, urlID string) (string, error) {
-	shortURL, err := s.getShortURL(ctx, urlID)
+func (s *serviceImpl) RedirectTo(ctx context.Context, id int64) (string, error) {
+	shortURL, err := s.getShortURL(ctx, id)
 	if err != nil {
 		return "", err
 	}
@@ -37,23 +34,18 @@ func (s *serviceImpl) RedirectTo(ctx context.Context, urlID string) (string, err
 	return shortURL.URL, nil
 }
 
-func (s *serviceImpl) getShortURL(ctx context.Context, urlID string) (*record.ShortURL, error) {
+func (s *serviceImpl) getShortURL(ctx context.Context, id int64) (*record.ShortURL, error) {
 	var err error
-	var id int64
 	var shortURL *record.ShortURL
 
-	shortURL, err = s.cacheStore.Get(ctx, urlID)
+	shortURL, err = s.cacheStore.Get(ctx, id)
 	if err == nil {
 		// cache hit, return the result
 		return shortURL, nil
 	}
 	if err != cache.ErrKeyNotFound {
 		// suppress error
-		log.Errorf("getShortURL: cache store err: %v, with url_id: %v", err, urlID)
-	}
-	id, err = s.conv.ConvertToID(urlID)
-	if err != nil {
-		return nil, err
+		log.Errorf("getShortURL: cache store err: %v, with id: %v", err, id)
 	}
 	shortURL, err = s.dbStore.Get(ctx, id)
 	if err != nil {

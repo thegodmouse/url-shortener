@@ -37,12 +37,11 @@ func main() {
 
 	dbStore := db.NewSQLStore(sqlDB)
 	cacheStore := cache.NewRedisStore(*config.RedisAddr, *config.RedisPassword)
-	conv := converter.NewConverter()
 
-	shortenSrv := shortener.NewService(dbStore, cacheStore, conv)
-	redirectSrv := redirect.NewService(dbStore, cacheStore, conv)
+	shortenSrv := shortener.NewService(dbStore, cacheStore)
+	redirectSrv := redirect.NewService(dbStore, cacheStore)
 
-	server := api.NewServer(*config.HostName, shortenSrv, redirectSrv)
+	server := api.NewServer(*config.HostName, shortenSrv, redirectSrv, converter.NewConverter())
 
 	log.Fatal(server.Serve(fmt.Sprintf("%v:%v", *config.HostIp, *config.HostPort)))
 }

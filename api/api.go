@@ -18,13 +18,19 @@ const (
 	ShortenerPathV1 = "/api/v1/urls"
 )
 
-func NewServer(hostname string, shortenSrv shortener.Service, redirectSrv redirect.Service) *Server {
+func NewServer(
+	hostname string,
+	shortenSrv shortener.Service,
+	redirectSrv redirect.Service,
+	conv converter.Converter,
+) *Server {
 	router := gin.Default()
 	server := &Server{
 		hostname:    hostname,
 		router:      router,
 		shortenSrv:  shortenSrv,
 		redirectSrv: redirectSrv,
+		conv:        conv,
 	}
 	shortenerGroupV1 := router.Group(ShortenerPathV1)
 	shortenerGroupV1.POST("/", server.createURL)
@@ -37,6 +43,7 @@ type Server struct {
 	hostname    string
 	shortenSrv  shortener.Service
 	redirectSrv redirect.Service
+	conv        converter.Converter
 	router      *gin.Engine
 }
 
@@ -63,10 +70,17 @@ func (s *Server) createURL(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "expireAt is in the past"})
 		return
 	}
+	var id int64
 	var urlID string
-	urlID, err = s.shortenSrv.Shorten(ctx, createURLRequest.URL, expireAt)
+	id, err = s.shortenSrv.Shorten(ctx, createURLRequest.URL, expireAt)
 	if err != nil {
 		log.Errorf("createURL: shorten url for request %+v, err: %v", createURLRequest, err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		return
+	}
+	urlID, err = s.conv.ConvertToShortURL(id)
+	if err != nil {
+		log.Errorf("createURL: convert id to url_id err: %v, id: %v", err, id)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
 		return
 	}
@@ -80,11 +94,14 @@ func (s *Server) createURL(ctx *gin.Context) {
 // deleteURL deletes a short url in the db.
 func (s *Server) deleteURL(ctx *gin.Context) {
 	urlID := ctx.Param("url_id")
-	if err := s.shortenSrv.Delete(ctx, urlID); err != nil {
+	id, err := s.conv.ConvertToID(urlID)
+	if err != nil {
+		log.Errorf("deleteURL: wrong format for url_id: %v", urlID)
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "url_id is in wrong format"})
+		return
+	}
+	if err := s.shortenSrv.Delete(ctx, id); err != nil {
 		switch err {
-		case converter.ErrURLFormat:
-			log.Errorf("deleteURL: wrong format for url_id: %v", urlID)
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "url_id is in wrong format"})
 		case db.ErrNoRows:
 			log.Errorf("deleteURL: cannot find url_id: %v", urlID)
 			ctx.JSON(http.StatusNotFound, gin.H{"message": "requested url_id not found"})
@@ -101,12 +118,15 @@ func (s *Server) deleteURL(ctx *gin.Context) {
 // redirectURL redirects a short url to its original url.
 func (s *Server) redirectURL(ctx *gin.Context) {
 	urlID := ctx.Param("url_id")
-	location, err := s.redirectSrv.RedirectTo(ctx, urlID)
+	id, err := s.conv.ConvertToID(urlID)
+	if err != nil {
+		log.Errorf("redirectURL: wrong format for url_id: %v", urlID)
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "url_id is in wrong format"})
+		return
+	}
+	location, err := s.redirectSrv.RedirectTo(ctx, id)
 	if err != nil {
 		switch err {
-		case converter.ErrURLFormat:
-			log.Errorf("redirectURL: wrong format for url_id: %v", urlID)
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "url_id is in wrong format"})
 		case db.ErrNoRows:
 			log.Errorf("redirectURL: cannot find url_id: %v", urlID)
 			ctx.JSON(http.StatusNotFound, gin.H{"message": "requested url_id not found"})
