@@ -7,4 +7,5 @@ type ShortURL struct {
 	CreatedAt time.Time
 	ExpireAt  time.Time
 	URL       string
+	IsDeleted bool
 }
