@@ -67,7 +67,7 @@ func (s *APITestSuite) TestCreateURL() {
 	w := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = httptest.NewRequest(
-		"POST", ShortenerPathV1, s.makeTestCreateURLRequestBody(url, expireAt))
+		"POST", ShortenerPathV1, s.makeTestCreateURLRequestBody(url, expireAt.Format(time.RFC3339)))
 	// SUT
 	server.createURL(ctx)
 
@@ -89,13 +89,19 @@ func (s *APITestSuite) TestCreateURL_withBadRequest() {
 		{
 			body: s.makeTestCreateURLRequestBody(
 				"http://localhost:5556",
-				time.Now().Add(-time.Minute),
+				time.Now().Add(-time.Minute).Format(time.RFC3339),
 			),
 		},
 		{
 			body: s.makeTestCreateURLRequestBody(
 				"http://localhost:5566",
-				time.Now().Add(-time.Minute),
+				time.Now().Add(-time.Minute).Format(time.RFC3339),
+			),
+		},
+		{
+			body: s.makeTestCreateURLRequestBody(
+				"http://localhost:5566",
+				"unknown-format-expireAt",
 			),
 		},
 	}
@@ -126,17 +132,43 @@ func (s *APITestSuite) TestCreateURL_withShortenerError() {
 	w := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = httptest.NewRequest(
-		"POST", ShortenerPathV1, s.makeTestCreateURLRequestBody(url, expireAt))
+		"POST", ShortenerPathV1, s.makeTestCreateURLRequestBody(url, expireAt.Format(time.RFC3339)))
 	// SUT
 	server.createURL(ctx)
 
 	s.Equal(http.StatusInternalServerError, w.Code)
 }
 
-func (s *APITestSuite) makeTestCreateURLRequestBody(url string, expireAt time.Time) io.Reader {
+func (s *APITestSuite) TestCreateURL_withConvertError() {
+	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
+
+	url := "http://localhost:7788"
+	expireAt := time.Now().Add(time.Minute).Round(time.Second)
+	id := int64(12345)
+	s.mockShortener.
+		EXPECT().
+		Shorten(gomock.Any(), gomock.Eq(url), gomock.Eq(expireAt)).
+		Return(id, nil)
+	s.mockConv.
+		EXPECT().
+		ConvertToShortURL(gomock.Eq(id)).
+		Return("", errors.New("unknown convert error"))
+
+	// create test context
+	w := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(w)
+	ctx.Request = httptest.NewRequest(
+		"POST", ShortenerPathV1, s.makeTestCreateURLRequestBody(url, expireAt.Format(time.RFC3339)))
+	// SUT
+	server.createURL(ctx)
+
+	s.Equal(http.StatusInternalServerError, w.Code)
+}
+
+func (s *APITestSuite) makeTestCreateURLRequestBody(url string, expireAtStr string) io.Reader {
 	request := &dto.CreateURLRequest{
 		URL:      url,
-		ExpireAt: expireAt.Format(time.RFC3339),
+		ExpireAt: expireAtStr,
 	}
 	buf := new(bytes.Buffer)
 	json.NewEncoder(buf).Encode(request)
@@ -213,6 +245,27 @@ func (s *APITestSuite) TestDeleteURL_withShortenerError() {
 	}
 }
 
+func (s *APITestSuite) TestDeleteURL_withConvertError() {
+	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
+
+	urlID := "12345"
+
+	s.mockConv.
+		EXPECT().
+		ConvertToID(gomock.Eq(urlID)).
+		Return(int64(0), errors.New("unknown convert error"))
+
+	// create test context
+	w := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(w)
+	ctx.Request = httptest.NewRequest("DELETE", ShortenerPathV1, nil)
+	ctx.Params = append(ctx.Params, gin.Param{Key: "url_id", Value: urlID})
+	// SUT
+	server.deleteURL(ctx)
+
+	s.Equal(http.StatusBadRequest, w.Code)
+}
+
 func (s *APITestSuite) TestRedirectURL() {
 	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
 
@@ -280,4 +333,23 @@ func (s *APITestSuite) TestRedirectURL_withRedirectError() {
 
 		s.Equal(testCase.expCode, w.Code)
 	}
+}
+
+func (s *APITestSuite) TestRedirectURL_withConvertError() {
+	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
+
+	urlID := "12345"
+	s.mockConv.
+		EXPECT().
+		ConvertToID(gomock.Eq(urlID)).
+		Return(int64(0), errors.New("unknown convert error"))
+
+	w := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(w)
+	ctx.Request = httptest.NewRequest("GET", "/", nil)
+	ctx.Params = append(ctx.Params, gin.Param{Key: "url_id", Value: urlID})
+	// SUT
+	server.redirectURL(ctx)
+
+	s.Equal(http.StatusBadRequest, w.Code)
 }
