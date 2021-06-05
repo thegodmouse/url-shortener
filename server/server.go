@@ -9,13 +9,12 @@ import (
 	"github.com/thegodmouse/url-shortener/config"
 	"github.com/thegodmouse/url-shortener/services/redirect"
 	"github.com/thegodmouse/url-shortener/services/shortener"
-
 )
 
 func main() {
 	flag.Parse()
 
-	server := api.NewServer(*config.HostName,shortener.NewService(), redirect.NewService())
+	server := api.NewServer(*config.HostName, shortener.NewService(), redirect.NewService())
 
 	log.Fatal(server.Serve(fmt.Sprintf("%v:%v", *config.HostIp, *config.HostPort)))
 }
