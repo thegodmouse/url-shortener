@@ -5,21 +5,24 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/thegodmouse/url-shortener/cache"
+	"github.com/thegodmouse/url-shortener/converter"
 	"github.com/thegodmouse/url-shortener/db"
 	"github.com/thegodmouse/url-shortener/db/record"
 	"github.com/thegodmouse/url-shortener/util"
 )
 
-func NewService(dbStore db.Store, cacheStore cache.Store) *serviceImpl {
+func NewService(dbStore db.Store, cacheStore cache.Store, conv converter.Converter) *serviceImpl {
 	return &serviceImpl{
 		dbStore:    dbStore,
 		cacheStore: cacheStore,
+		conv:       conv,
 	}
 }
 
 type serviceImpl struct {
 	dbStore    db.Store
 	cacheStore cache.Store
+	conv       converter.Converter
 }
 
 // RedirectTo returns the original url of the urlID if exists.
@@ -48,7 +51,7 @@ func (s *serviceImpl) getShortURL(ctx context.Context, urlID string) (*record.Sh
 		// suppress error
 		log.Errorf("getShortURL: cache store err: %v, with url_id: %v", err, urlID)
 	}
-	id, err = util.ConvertToID(urlID)
+	id, err = s.conv.ConvertToID(urlID)
 	if err != nil {
 		return nil, err
 	}

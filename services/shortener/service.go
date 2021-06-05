@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/thegodmouse/url-shortener/cache"
+	"github.com/thegodmouse/url-shortener/converter"
 	"github.com/thegodmouse/url-shortener/db"
 	"github.com/thegodmouse/url-shortener/db/record"
-	"github.com/thegodmouse/url-shortener/util"
 )
 
 type Service interface {
@@ -16,16 +16,18 @@ type Service interface {
 	Delete(ctx context.Context, urlID string) error
 }
 
-func NewService(dbStore db.Store, cacheStore cache.Store) *serviceImpl {
+func NewService(dbStore db.Store, cacheStore cache.Store, conv converter.Converter) *serviceImpl {
 	return &serviceImpl{
 		dbStore:    dbStore,
 		cacheStore: cacheStore,
+		conv:       conv,
 	}
 }
 
 type serviceImpl struct {
 	dbStore    db.Store
 	cacheStore cache.Store
+	conv       converter.Converter
 }
 
 func (s *serviceImpl) Shorten(ctx context.Context, url string, expireAt time.Time) (string, error) {
@@ -37,7 +39,7 @@ func (s *serviceImpl) Shorten(ctx context.Context, url string, expireAt time.Tim
 	if err != nil {
 		return "", err
 	}
-	urlID, err = util.ConvertToShortURL(shortURL.ID)
+	urlID, err = s.conv.ConvertToShortURL(shortURL.ID)
 	if err != nil {
 		return "", err
 	}
@@ -50,7 +52,7 @@ func (s *serviceImpl) Shorten(ctx context.Context, url string, expireAt time.Tim
 }
 
 func (s *serviceImpl) Delete(ctx context.Context, urlID string) error {
-	id, err := util.ConvertToID(urlID)
+	id, err := s.conv.ConvertToID(urlID)
 	if err != nil {
 		return err
 	}
