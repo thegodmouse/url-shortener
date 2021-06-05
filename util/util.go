@@ -8,7 +8,6 @@ import (
 )
 
 var (
-	ErrURLFormat  = errors.New("urlID is in wrong format")
 	ErrURLExpired = errors.New("short url is expired")
 )
 

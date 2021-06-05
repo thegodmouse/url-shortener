@@ -13,11 +13,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"github.com/thegodmouse/url-shortener/converter"
 	"github.com/thegodmouse/url-shortener/db"
 	"github.com/thegodmouse/url-shortener/dto"
 	mr "github.com/thegodmouse/url-shortener/services/redirect/mock"
 	ms "github.com/thegodmouse/url-shortener/services/shortener/mock"
-	"github.com/thegodmouse/url-shortener/util"
 )
 
 func TestAPI(t *testing.T) {
@@ -173,7 +173,7 @@ func (s *APITestSuite) TestDeleteURL_withShortenerError() {
 		},
 		{
 			urlID:        "456",
-			shortenerErr: util.ErrURLFormat,
+			shortenerErr: converter.ErrURLFormat,
 			expCode:      http.StatusBadRequest,
 		},
 		{
@@ -236,7 +236,7 @@ func (s *APITestSuite) TestRedirectURL_withRedirectError() {
 		},
 		{
 			urlID:       "456",
-			redirectErr: util.ErrURLFormat,
+			redirectErr: converter.ErrURLFormat,
 			expCode:     http.StatusBadRequest,
 		},
 		{

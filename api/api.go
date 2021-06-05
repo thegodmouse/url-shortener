@@ -7,11 +7,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"github.com/thegodmouse/url-shortener/converter"
 	"github.com/thegodmouse/url-shortener/db"
 	"github.com/thegodmouse/url-shortener/dto"
 	"github.com/thegodmouse/url-shortener/services/redirect"
 	"github.com/thegodmouse/url-shortener/services/shortener"
-	"github.com/thegodmouse/url-shortener/util"
 )
 
 const (
@@ -82,7 +82,7 @@ func (s *Server) deleteURL(ctx *gin.Context) {
 	urlID := ctx.Param("url_id")
 	if err := s.shortenSrv.Delete(ctx, urlID); err != nil {
 		switch err {
-		case util.ErrURLFormat:
+		case converter.ErrURLFormat:
 			log.Errorf("deleteURL: wrong format for url_id: %v", urlID)
 			ctx.JSON(http.StatusBadRequest, gin.H{"message": "url_id is in wrong format"})
 		case db.ErrNoRows:
@@ -104,7 +104,7 @@ func (s *Server) redirectURL(ctx *gin.Context) {
 	location, err := s.redirectSrv.RedirectTo(ctx, urlID)
 	if err != nil {
 		switch err {
-		case util.ErrURLFormat:
+		case converter.ErrURLFormat:
 			log.Errorf("redirectURL: wrong format for url_id: %v", urlID)
 			ctx.JSON(http.StatusBadRequest, gin.H{"message": "url_id is in wrong format"})
 		case db.ErrNoRows:

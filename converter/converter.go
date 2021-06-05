@@ -1,10 +1,13 @@
 package converter
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
+)
 
-	"github.com/thegodmouse/url-shortener/util"
+var (
+	ErrURLFormat = errors.New("urlID is in wrong format")
 )
 
 type Converter interface {
@@ -19,13 +22,13 @@ func NewConverter() *converterImpl {
 type converterImpl struct{}
 
 func (c *converterImpl) ConvertToShortURL(id int64) (string, error) {
-	return fmt.Sprintf("%06d", id), nil
+	return fmt.Sprintf("%d", id), nil
 }
 
 func (c *converterImpl) ConvertToID(shortURL string) (int64, error) {
 	id, err := strconv.ParseInt(shortURL, 10, 64)
 	if err != nil {
-		return 0, util.ErrURLFormat
+		return 0, ErrURLFormat
 	}
 	return id, err
 }
