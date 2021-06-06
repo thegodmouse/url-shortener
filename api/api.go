@@ -26,25 +26,25 @@ func NewServer(
 ) *Server {
 	router := gin.Default()
 	server := &Server{
-		hostname:    hostname,
-		router:      router,
-		shortenSrv:  shortenSrv,
-		redirectSrv: redirectSrv,
-		conv:        conv,
+		redirectServeURL: hostname,
+		router:           router,
+		shortenSrv:       shortenSrv,
+		redirectSrv:      redirectSrv,
+		conv:             conv,
 	}
 	shortenerGroupV1 := router.Group(ShortenerPathV1)
-	shortenerGroupV1.POST("/", server.createURL)
+	shortenerGroupV1.POST("", server.createURL)
 	shortenerGroupV1.DELETE("/:url_id", server.deleteURL)
 	router.GET("/:url_id", server.redirectURL)
 	return server
 }
 
 type Server struct {
-	hostname    string
-	shortenSrv  shortener.Service
-	redirectSrv redirect.Service
-	conv        converter.Converter
-	router      *gin.Engine
+	redirectServeURL string
+	shortenSrv       shortener.Service
+	redirectSrv      redirect.Service
+	conv             converter.Converter
+	router           *gin.Engine
 }
 
 func (s *Server) Serve(addr string) error {
@@ -87,7 +87,7 @@ func (s *Server) createURL(ctx *gin.Context) {
 	log.Infof("createURL: generated short url: %v, request: %+v", urlID, createURLRequest)
 	ctx.JSON(http.StatusOK, &dto.CreateURLResponse{
 		ID:       urlID,
-		ShortURL: fmt.Sprintf("%v/%v", s.hostname, urlID),
+		ShortURL: fmt.Sprintf("%v/%v", s.redirectServeURL, urlID),
 	})
 }
 

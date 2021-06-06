@@ -3,8 +3,8 @@ package config
 import "flag"
 
 var (
-	ServerHost = flag.String("server_host", "localhost", "host ip of URL Shortener")
-	ServerPort = flag.String("server_port", "16000", "host port of URL Shortener")
+	ServerPort       = flag.String("server_port", "80", "host port of URL Shortener")
+	RedirectServeURL = flag.String("redirect_serve_url", "http://localhost", "url to serve redirect api")
 
 	MySQLServerAddr   = flag.String("mysql_server_addr", "localhost:3306", "mysql server addr")
 	MySQLRootPassword = flag.String("mysql_server_root_password", "", "root password for connecting mysql server")
