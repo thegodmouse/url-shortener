@@ -18,6 +18,7 @@ import (
 	"github.com/thegodmouse/url-shortener/dto"
 	mr "github.com/thegodmouse/url-shortener/services/redirect/mock"
 	ms "github.com/thegodmouse/url-shortener/services/shortener/mock"
+	"github.com/thegodmouse/url-shortener/util"
 )
 
 func TestAPI(t *testing.T) {
@@ -305,6 +306,12 @@ func (s *APITestSuite) TestRedirectURL_withRedirectError() {
 			id:          int64(123),
 			urlID:       "123",
 			redirectErr: db.ErrNoRows,
+			expCode:     http.StatusNotFound,
+		},
+		{
+			id:          int64(456),
+			urlID:       "456",
+			redirectErr: util.ErrURLNotFound,
 			expCode:     http.StatusNotFound,
 		},
 		{

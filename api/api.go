@@ -12,6 +12,7 @@ import (
 	"github.com/thegodmouse/url-shortener/dto"
 	"github.com/thegodmouse/url-shortener/services/redirect"
 	"github.com/thegodmouse/url-shortener/services/shortener"
+	"github.com/thegodmouse/url-shortener/util"
 )
 
 const (
@@ -127,7 +128,7 @@ func (s *Server) redirectURL(ctx *gin.Context) {
 	location, err := s.redirectSrv.RedirectTo(ctx, id)
 	if err != nil {
 		switch err {
-		case db.ErrNoRows:
+		case db.ErrNoRows, util.ErrURLNotFound:
 			log.Errorf("redirectURL: cannot find url_id: %v", urlID)
 			ctx.JSON(http.StatusNotFound, gin.H{"message": "requested url_id not found"})
 		default:

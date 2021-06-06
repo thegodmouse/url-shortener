@@ -48,6 +48,7 @@ func (s *RedirectTestSuite) TestRedirectTo_withCacheHit() {
 		CreatedAt: time.Now().Add(-time.Minute),
 		ExpireAt:  time.Now().Add(time.Minute),
 		URL:       expURL,
+		IsDeleted: false,
 	}
 
 	s.mockCache.
@@ -72,6 +73,7 @@ func (s *RedirectTestSuite) TestRedirectTo_withCacheMissDatabaseFound() {
 		CreatedAt: time.Now().Add(-time.Minute),
 		ExpireAt:  time.Now().Add(time.Minute),
 		URL:       expURL,
+		IsDeleted: false,
 	}
 
 	s.mockCache.
@@ -104,6 +106,7 @@ func (s *RedirectTestSuite) TestRedirectTo_withCacheGetError() {
 		CreatedAt: time.Now().Add(-time.Minute),
 		ExpireAt:  time.Now().Add(time.Minute),
 		URL:       expURL,
+		IsDeleted: false,
 	}
 
 	s.mockCache.
@@ -136,6 +139,7 @@ func (s *RedirectTestSuite) TestRedirectTo_withCacheSetError() {
 		CreatedAt: time.Now().Add(-time.Minute),
 		ExpireAt:  time.Now().Add(time.Minute),
 		URL:       expURL,
+		IsDeleted: false,
 	}
 
 	s.mockCache.
@@ -171,6 +175,56 @@ func (s *RedirectTestSuite) TestRedirectTo_withURLNotFound() {
 		EXPECT().
 		Get(gomock.Any(), gomock.Eq(id)).
 		Return(nil, db.ErrNoRows)
+
+	// SUT
+	gotURL, gotErr := srv.RedirectTo(context.Background(), id)
+
+	s.Error(gotErr)
+	s.Empty(gotURL)
+}
+
+func (s *RedirectTestSuite) TestRedirectTo_withRecordDeleted() {
+	srv := NewService(s.mockDB, s.mockCache)
+
+	id := int64(54321)
+	expURL := "http://localhost:5678"
+	shortURL := &record.ShortURL{
+		ID:        id,
+		CreatedAt: time.Now().Add(-time.Minute),
+		ExpireAt:  time.Now().Add(time.Minute),
+		URL:       expURL,
+		IsDeleted: true,
+	}
+
+	s.mockCache.
+		EXPECT().
+		Get(gomock.Any(), gomock.Eq(id)).
+		Return(shortURL, nil)
+
+	// SUT
+	gotURL, gotErr := srv.RedirectTo(context.Background(), id)
+
+	s.Error(gotErr)
+	s.Empty(gotURL)
+}
+
+func (s *RedirectTestSuite) TestRedirectTo_withRecordExpired() {
+	srv := NewService(s.mockDB, s.mockCache)
+
+	id := int64(54321)
+	expURL := "http://localhost:5678"
+	shortURL := &record.ShortURL{
+		ID:        id,
+		CreatedAt: time.Now().Add(-2 * time.Minute),
+		ExpireAt:  time.Now().Add(-time.Minute),
+		URL:       expURL,
+		IsDeleted: false,
+	}
+
+	s.mockCache.
+		EXPECT().
+		Get(gomock.Any(), gomock.Eq(id)).
+		Return(shortURL, nil)
 
 	// SUT
 	gotURL, gotErr := srv.RedirectTo(context.Background(), id)
