@@ -32,17 +32,23 @@ func (s *serviceImpl) Shorten(ctx context.Context, url string, expireAt time.Tim
 	}
 	err = s.cacheStore.Set(ctx, shortURL.ID, shortURL)
 	if err != nil {
-		log.Errorf("Shorten: set cache err: %v, urlID: %v", err, shortURL.ID)
+		log.Errorf("Shorten: cache store set err: %v, id: %v", err, shortURL.ID)
 	}
 	return shortURL.ID, nil
 }
 
 func (s *serviceImpl) Delete(ctx context.Context, id int64) error {
+	shortURL, err := s.cacheStore.Get(ctx, id)
+	if err != nil {
+		log.Errorf("Delete: cache store get err: %v, id: %v", err, id)
+	} else if shortURL.IsDeleted {
+		return nil
+	}
 	if err := s.dbStore.Delete(ctx, id); err != nil {
 		return err
 	}
-	if err := s.cacheStore.Evict(ctx, id); err != nil {
-		log.Errorf("Delete: evict cache err: %v, id: %v", err, id)
+	if err := s.cacheStore.Set(ctx, id, &record.ShortURL{ID: id, IsDeleted: true}); err != nil {
+		log.Errorf("Delete: cache store set err: %v, id: %v", err, id)
 	}
 	return nil
 }

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 	mc "github.com/thegodmouse/url-shortener/cache/mock"
@@ -121,13 +122,17 @@ func (s *ShortenerTestSuite) TestDelete() {
 
 	id := int64(12345)
 
+	s.cacheStore.
+		EXPECT().
+		Get(gomock.Any(), gomock.Eq(id)).
+		Return(nil, redis.Nil)
 	s.dbStore.
 		EXPECT().
 		Delete(gomock.Any(), gomock.Eq(id)).
 		Return(nil)
 	s.cacheStore.
 		EXPECT().
-		Evict(gomock.Any(), gomock.Eq(id)).
+		Set(gomock.Any(), gomock.Eq(id), &recordMatcher{shortURL: &record.ShortURL{ID: id, IsDeleted: true}}).
 		Return(nil)
 
 	// SUT
@@ -141,6 +146,10 @@ func (s *ShortenerTestSuite) TestDelete_withDatabaseError() {
 
 	id := int64(12345)
 
+	s.cacheStore.
+		EXPECT().
+		Get(gomock.Any(), gomock.Eq(id)).
+		Return(nil, redis.Nil)
 	s.dbStore.
 		EXPECT().
 		Delete(gomock.Any(), gomock.Eq(id)).
@@ -152,19 +161,47 @@ func (s *ShortenerTestSuite) TestDelete_withDatabaseError() {
 	s.Error(gotErr)
 }
 
-func (s *ShortenerTestSuite) TestDelete_withCacheError() {
+func (s *ShortenerTestSuite) TestDelete_withCacheGetError() {
 	srv := NewService(s.dbStore, s.cacheStore)
 
 	id := int64(12345)
 
+	s.cacheStore.
+		EXPECT().
+		Get(gomock.Any(), gomock.Eq(id)).
+		Return(nil, errors.New("unknown cache error"))
 	s.dbStore.
 		EXPECT().
 		Delete(gomock.Any(), gomock.Eq(id)).
 		Return(nil)
 	s.cacheStore.
 		EXPECT().
-		Evict(gomock.Any(), gomock.Eq(id)).
-		Return(errors.New("cache error"))
+		Set(gomock.Any(), gomock.Eq(id), &recordMatcher{shortURL: &record.ShortURL{ID: id, IsDeleted: true}}).
+		Return(nil)
+
+	// SUT
+	gotErr := srv.Delete(context.Background(), id)
+
+	s.NoError(gotErr)
+}
+
+func (s *ShortenerTestSuite) TestDelete_withCacheSetError() {
+	srv := NewService(s.dbStore, s.cacheStore)
+
+	id := int64(12345)
+
+	s.cacheStore.
+		EXPECT().
+		Get(gomock.Any(), gomock.Eq(id)).
+		Return(nil, redis.Nil)
+	s.dbStore.
+		EXPECT().
+		Delete(gomock.Any(), gomock.Eq(id)).
+		Return(nil)
+	s.cacheStore.
+		EXPECT().
+		Set(gomock.Any(), gomock.Eq(id), &recordMatcher{shortURL: &record.ShortURL{ID: id, IsDeleted: true}}).
+		Return(errors.New("unknown cache err"))
 
 	// SUT
 	gotErr := srv.Delete(context.Background(), id)

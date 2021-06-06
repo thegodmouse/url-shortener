@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"log"
+
 	"github.com/go-sql-driver/mysql"
 	"github.com/thegodmouse/url-shortener/api"
 	"github.com/thegodmouse/url-shortener/cache"
@@ -11,7 +13,6 @@ import (
 	"github.com/thegodmouse/url-shortener/db"
 	"github.com/thegodmouse/url-shortener/services/redirect"
 	"github.com/thegodmouse/url-shortener/services/shortener"
-	"log"
 )
 
 func main() {
