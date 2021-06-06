@@ -3,8 +3,8 @@ package main
 import (
 	"database/sql"
 	"flag"
-	"fmt"
 	"log"
+	"net"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/thegodmouse/url-shortener/api"
@@ -36,12 +36,14 @@ func main() {
 	}
 
 	dbStore := db.NewSQLStore(sqlDB)
-	cacheStore := cache.NewRedisStore(*config.RedisAddr, *config.RedisPassword)
+	cacheStore := cache.NewRedisStore(*config.RedisAddr, *config.RedisAdminPassword)
 
 	shortenSrv := shortener.NewService(dbStore, cacheStore)
 	redirectSrv := redirect.NewService(dbStore, cacheStore)
 
-	server := api.NewServer(*config.HostName, shortenSrv, redirectSrv, converter.NewConverter())
+	serverAddr := net.JoinHostPort(*config.ServerHost, *config.ServerPort)
 
-	log.Fatal(server.Serve(fmt.Sprintf("%v:%v", *config.HostIp, *config.HostPort)))
+	server := api.NewServer(serverAddr, shortenSrv, redirectSrv, converter.NewConverter())
+
+	log.Fatal(server.Serve(serverAddr))
 }

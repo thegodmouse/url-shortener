@@ -1,0 +1,43 @@
+version: "3"
+
+services:
+  server:
+    image: url_shortener:test
+    container_name: url_shortener_server
+    command: server
+    environment:
+      SERVER_HOST: ${SERVER_HOST:-"localhost"}
+      SERVER_PORT: ${SERVER_PORT:-"16000"}
+      MYSQL_SERVER_ADDR: ${MYSQL_SERVER_ADDR:-"localhost:3306"}
+      MYSQL_SERVER_ROOT_PASSWORD: ${MYSQL_SERVER_ROOT_PASSWORD:-""}
+      REDIS_SERVER_ADDR: ${REDIS_SERVER_ADDR:-"localhost:6379"}
+    ports:
+      - 8080:16000
+    networks:
+      - url_shortener_application
+
+  cache:
+    image: redis:6.2-alpine
+    container_name: url_shortener_redis_cache
+    command: redis-server
+    networks:
+      - url_shortener_application
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: test_url_shortener
+    container_name: url_shortener_mysql_db
+    networks:
+      - url_shortener_application
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - data-volume:/var/lib/mysql
+
+networks:
+  url_shortener_application:
+    driver: bridge
+
+volumes:
+  data-volume:
+    external: false
