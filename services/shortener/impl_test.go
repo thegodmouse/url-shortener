@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"github.com/thegodmouse/url-shortener/cache"
 	mc "github.com/thegodmouse/url-shortener/cache/mock"
 	md "github.com/thegodmouse/url-shortener/db/mock"
 	"github.com/thegodmouse/url-shortener/db/record"
@@ -125,7 +125,7 @@ func (s *ShortenerTestSuite) TestDelete() {
 	s.cacheStore.
 		EXPECT().
 		Get(gomock.Any(), gomock.Eq(id)).
-		Return(nil, redis.Nil)
+		Return(nil, cache.ErrKeyNotFound)
 	s.dbStore.
 		EXPECT().
 		Delete(gomock.Any(), gomock.Eq(id)).
@@ -149,7 +149,7 @@ func (s *ShortenerTestSuite) TestDelete_withDatabaseError() {
 	s.cacheStore.
 		EXPECT().
 		Get(gomock.Any(), gomock.Eq(id)).
-		Return(nil, redis.Nil)
+		Return(nil, cache.ErrKeyNotFound)
 	s.dbStore.
 		EXPECT().
 		Delete(gomock.Any(), gomock.Eq(id)).
@@ -193,7 +193,7 @@ func (s *ShortenerTestSuite) TestDelete_withCacheSetError() {
 	s.cacheStore.
 		EXPECT().
 		Get(gomock.Any(), gomock.Eq(id)).
-		Return(nil, redis.Nil)
+		Return(nil, cache.ErrKeyNotFound)
 	s.dbStore.
 		EXPECT().
 		Delete(gomock.Any(), gomock.Eq(id)).

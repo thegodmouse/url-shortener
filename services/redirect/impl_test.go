@@ -3,6 +3,7 @@ package redirect
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -81,6 +82,10 @@ func (s *RedirectTestSuite) TestRedirectTo_withCacheMissDatabaseFound() {
 		EXPECT().
 		Get(gomock.Any(), gomock.Eq(id)).
 		Return(shortURL, nil)
+	s.mockCache.
+		EXPECT().
+		Set(gomock.Any(), gomock.Eq(id), &recordMatcher{shortURL: shortURL}).
+		Return(nil)
 
 	// SUT
 	gotURL, gotErr := srv.RedirectTo(context.Background(), id)
@@ -89,7 +94,7 @@ func (s *RedirectTestSuite) TestRedirectTo_withCacheMissDatabaseFound() {
 	s.Equal(expURL, gotURL)
 }
 
-func (s *RedirectTestSuite) TestRedirectTo_withCacheError() {
+func (s *RedirectTestSuite) TestRedirectTo_withCacheGetError() {
 	srv := NewService(s.mockDB, s.mockCache)
 
 	id := int64(54321)
@@ -109,6 +114,42 @@ func (s *RedirectTestSuite) TestRedirectTo_withCacheError() {
 		EXPECT().
 		Get(gomock.Any(), gomock.Eq(id)).
 		Return(shortURL, nil)
+	s.mockCache.
+		EXPECT().
+		Set(gomock.Any(), gomock.Eq(id), &recordMatcher{shortURL: shortURL}).
+		Return(nil)
+
+	// SUT
+	gotURL, gotErr := srv.RedirectTo(context.Background(), id)
+
+	s.NoError(gotErr)
+	s.Equal(expURL, gotURL)
+}
+
+func (s *RedirectTestSuite) TestRedirectTo_withCacheSetError() {
+	srv := NewService(s.mockDB, s.mockCache)
+
+	id := int64(54321)
+	expURL := "http://localhost:5678"
+	shortURL := &record.ShortURL{
+		ID:        id,
+		CreatedAt: time.Now().Add(-time.Minute),
+		ExpireAt:  time.Now().Add(time.Minute),
+		URL:       expURL,
+	}
+
+	s.mockCache.
+		EXPECT().
+		Get(gomock.Any(), gomock.Eq(id)).
+		Return(nil, cache.ErrKeyNotFound)
+	s.mockDB.
+		EXPECT().
+		Get(gomock.Any(), gomock.Eq(id)).
+		Return(shortURL, nil)
+	s.mockCache.
+		EXPECT().
+		Set(gomock.Any(), gomock.Eq(id), &recordMatcher{shortURL: shortURL}).
+		Return(errors.New("unknown cache error"))
 
 	// SUT
 	gotURL, gotErr := srv.RedirectTo(context.Background(), id)
@@ -136,4 +177,23 @@ func (s *RedirectTestSuite) TestRedirectTo_withURLNotFound() {
 
 	s.Error(gotErr)
 	s.Empty(gotURL)
+}
+
+type recordMatcher struct {
+	shortURL *record.ShortURL
+}
+
+func (m recordMatcher) Matches(x interface{}) bool {
+	shortURL, ok := x.(*record.ShortURL)
+	if !ok {
+		return false
+	}
+	return m.shortURL.ID == shortURL.ID &&
+		m.shortURL.URL == shortURL.URL &&
+		m.shortURL.ExpireAt.Equal(shortURL.ExpireAt) &&
+		m.shortURL.CreatedAt.Equal(shortURL.CreatedAt)
+}
+
+func (m recordMatcher) String() string {
+	return fmt.Sprintf("has record: %+v", m.shortURL)
 }

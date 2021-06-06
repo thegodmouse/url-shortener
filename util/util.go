@@ -8,12 +8,19 @@ import (
 )
 
 var (
-	ErrURLExpired = errors.New("short url is expired")
+	ErrURLNotFound = errors.New("short url not found")
 )
 
 func IsRecordExpired(shortURL *record.ShortURL) bool {
 	if shortURL == nil {
-		return true
+		return false
 	}
 	return shortURL.ExpireAt.Before(time.Now())
+}
+
+func IsRecordDeleted(shortURL *record.ShortURL) bool {
+	if shortURL == nil {
+		return false
+	}
+	return shortURL.IsDeleted
 }
