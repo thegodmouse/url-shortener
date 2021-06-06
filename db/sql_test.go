@@ -51,7 +51,7 @@ func (s *SQLTestSuite) TestCreate() {
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	s.mock.
 		ExpectQuery(
-			"SELECT \\(id, url, created_at, expire_at, is_deleted\\) FROM url_shortener\\.short_urls").
+			"SELECT id, url, created_at, expire_at, is_deleted FROM url_shortener\\.short_urls").
 		WithArgs(id).
 		WillReturnRows(expRows)
 	s.mock.
@@ -78,7 +78,7 @@ func (s *SQLTestSuite) TestGet() {
 		AddRow(id, url, createdAt, expireAt, false)
 
 	s.mock.
-		ExpectQuery("SELECT \\(id, url, created_at, expire_at, is_deleted\\) " +
+		ExpectQuery("SELECT id, url, created_at, expire_at, is_deleted " +
 			"FROM url_shortener\\.short_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnRows(expRows)

@@ -4,22 +4,23 @@ services:
   server:
     image: url_shortener:test
     container_name: url_shortener_server
-    command: server
     environment:
-      SERVER_HOST: ${SERVER_HOST:-"localhost"}
-      SERVER_PORT: ${SERVER_PORT:-"16000"}
-      MYSQL_SERVER_ADDR: ${MYSQL_SERVER_ADDR:-"localhost:3306"}
-      MYSQL_SERVER_ROOT_PASSWORD: ${MYSQL_SERVER_ROOT_PASSWORD:-""}
-      REDIS_SERVER_ADDR: ${REDIS_SERVER_ADDR:-"localhost:6379"}
+      SERVER_HOST: ${SERVER_HOST:-}
+      SERVER_PORT: ${SERVER_PORT:-16000}
+      MYSQL_SERVER_ADDR: ${MYSQL_SERVER_ADDR:-db:3306}
+      MYSQL_SERVER_ROOT_PASSWORD: ${MYSQL_SERVER_ROOT_PASSWORD:-test_url_shortener}
+      REDIS_SERVER_ADDR: ${REDIS_SERVER_ADDR:-cache:6379}
+    depends_on:
+      - db
+      - cache
     ports:
-      - 8080:16000
+      - 16000:16000
     networks:
       - url_shortener_application
 
   cache:
     image: redis:6.2-alpine
     container_name: url_shortener_redis_cache
-    command: redis-server
     networks:
       - url_shortener_application
 

@@ -3,8 +3,10 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/thegodmouse/url-shortener/api"
@@ -26,7 +28,10 @@ func main() {
 		Net:                  "tcp",
 		DBName:               "url_shortener",
 		AllowNativePasswords: true,
+		ParseTime:            true,
 	}
+	time.Sleep(5 * time.Second)
+	fmt.Println("QQQ " + sqlCfg.FormatDSN())
 	sqlDB, err := sql.Open("mysql", sqlCfg.FormatDSN())
 	if err != nil {
 		panic(err)
@@ -41,9 +46,8 @@ func main() {
 	shortenSrv := shortener.NewService(dbStore, cacheStore)
 	redirectSrv := redirect.NewService(dbStore, cacheStore)
 
-	serverAddr := net.JoinHostPort(*config.ServerHost, *config.ServerPort)
+	server := api.NewServer(
+		net.JoinHostPort(*config.ServerHost, *config.ServerPort), shortenSrv, redirectSrv, converter.NewConverter())
 
-	server := api.NewServer(serverAddr, shortenSrv, redirectSrv, converter.NewConverter())
-
-	log.Fatal(server.Serve(serverAddr))
+	log.Fatal(server.Serve(":" + *config.ServerPort))
 }

@@ -41,7 +41,7 @@ func (s *sqlStore) Create(ctx context.Context, url string, expireAt time.Time) (
 		return nil, err
 	}
 
-	row := tx.QueryRow("SELECT (id, url, created_at, expire_at, is_deleted) FROM url_shortener.short_urls WHERE id = ?", id)
+	row := tx.QueryRow("SELECT id, url, created_at, expire_at, is_deleted FROM url_shortener.short_urls WHERE id = ?", id)
 
 	shortURL := &record.ShortURL{}
 	if err := row.Scan(
@@ -60,7 +60,7 @@ func (s *sqlStore) Create(ctx context.Context, url string, expireAt time.Time) (
 }
 
 func (s *sqlStore) Get(ctx context.Context, id int64) (*record.ShortURL, error) {
-	row := s.db.QueryRow("SELECT (id, url, created_at, expire_at, is_deleted) FROM url_shortener.short_urls WHERE id = ?", id)
+	row := s.db.QueryRow("SELECT id, url, created_at, expire_at, is_deleted FROM url_shortener.short_urls WHERE id = ?", id)
 
 	shortURL := &record.ShortURL{}
 	if err := row.Scan(

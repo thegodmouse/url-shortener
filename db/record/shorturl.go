@@ -1,6 +1,9 @@
 package record
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type ShortURL struct {
 	ID        int64
@@ -8,4 +11,12 @@ type ShortURL struct {
 	ExpireAt  time.Time
 	URL       string
 	IsDeleted bool
+}
+
+func (r *ShortURL) MarshalBinary() (data []byte, err error) {
+	return json.Marshal(r)
+}
+
+func (r *ShortURL) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, r)
 }

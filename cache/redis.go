@@ -34,7 +34,7 @@ type redisCache struct {
 }
 
 func (r *redisCache) Get(ctx context.Context, id int64) (*record.ShortURL, error) {
-	var shortURL *record.ShortURL
+	shortURL := &record.ShortURL{}
 	if err := r.client.Get(ctx, r.makeKey(id)).Scan(shortURL); err != nil {
 		return nil, err
 	}
