@@ -8,6 +8,7 @@ import (
 	"github.com/thegodmouse/url-shortener/cache"
 	"github.com/thegodmouse/url-shortener/db"
 	"github.com/thegodmouse/url-shortener/db/record"
+	"github.com/thegodmouse/url-shortener/util"
 )
 
 func NewService(dbStore db.Store, cacheStore cache.Store) *serviceImpl {
@@ -41,7 +42,7 @@ func (s *serviceImpl) Delete(ctx context.Context, id int64) error {
 	shortURL, err := s.cacheStore.Get(ctx, id)
 	if err != nil {
 		log.Errorf("Delete: cache store get err: %v, id: %v", err, id)
-	} else if shortURL.IsDeleted {
+	} else if util.IsRecordDeleted(shortURL) {
 		return nil
 	}
 	if err := s.dbStore.Delete(ctx, id); err != nil {

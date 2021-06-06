@@ -72,9 +72,6 @@ func (s *sqlStore) Get(ctx context.Context, id int64) (*record.ShortURL, error) 
 	); err != nil {
 		return nil, err
 	}
-	if shortURL.IsDeleted {
-		return nil, ErrNoRows
-	}
 	return shortURL, nil
 }
 
