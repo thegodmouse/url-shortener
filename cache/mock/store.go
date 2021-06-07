@@ -35,20 +35,6 @@ func (m *MockStore) EXPECT() *MockStoreMockRecorder {
 	return m.recorder
 }
 
-// Evict mocks base method.
-func (m *MockStore) Evict(ctx context.Context, id int64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Evict", ctx, id)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Evict indicates an expected call of Evict.
-func (mr *MockStoreMockRecorder) Evict(ctx, id interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Evict", reflect.TypeOf((*MockStore)(nil).Evict), ctx, id)
-}
-
 // Get mocks base method.
 func (m *MockStore) Get(ctx context.Context, id int64) (*record.ShortURL, error) {
 	m.ctrl.T.Helper()
