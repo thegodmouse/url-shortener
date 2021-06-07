@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"time"
 
 	"github.com/go-sql-driver/mysql"
 	log "github.com/sirupsen/logrus"
@@ -45,7 +46,7 @@ func main() {
 	// start checking for expire short urls
 	ctx, cancel := context.WithCancel(context.Background())
 
-	done := util.DeleteExpiredURLs(ctx, dbStore, cacheStore)
+	done := util.DeleteExpiredURLs(ctx, dbStore, 10*time.Minute)
 
 	if err := server.Serve(":" + *config.ServerPort); err != nil {
 		log.Errorf("Server: serve err: %v, at port: %v", err, *config.ServerPort)

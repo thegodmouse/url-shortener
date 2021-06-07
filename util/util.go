@@ -6,7 +6,6 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/thegodmouse/url-shortener/cache"
 	"github.com/thegodmouse/url-shortener/db"
 	"github.com/thegodmouse/url-shortener/db/record"
 )
@@ -29,10 +28,10 @@ func IsRecordDeleted(shortURL *record.ShortURL) bool {
 	return shortURL.IsDeleted
 }
 
-func DeleteExpiredURLs(ctx context.Context, dbStore db.Store, cacheStore cache.Store) <-chan bool {
+func DeleteExpiredURLs(ctx context.Context, dbStore db.Store, interval time.Duration) <-chan bool {
 	done := make(chan bool, 0)
 	go func() {
-		ticker := time.NewTicker(30 * time.Second)
+		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 		for {
 			select {
