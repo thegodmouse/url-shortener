@@ -73,7 +73,7 @@ func (s *Server) createURL(ctx *gin.Context) {
 	}
 	var id int64
 	var urlID string
-	id, err = s.shortenSrv.Shorten(ctx, createURLRequest.URL, expireAt)
+	id, err = s.shortenSrv.Shorten(ctx, createURLRequest.URL, expireAt.Round(time.Second))
 	if err != nil {
 		log.Errorf("createURL: shorten url for request %+v, err: %v", createURLRequest, err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
