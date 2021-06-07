@@ -11,3 +11,10 @@ CREATE TABLE IF NOT EXISTS short_urls
     is_deleted BOOLEAN   DEFAULT FALSE             NOT NULL,
     PRIMARY KEY (id)
 );
+
+CREATE TABLE IF NOT EXISTS recyclable_urls
+(
+    id         INTEGER                             NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    PRIMARY KEY (id)
+);

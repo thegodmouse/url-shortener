@@ -101,15 +101,9 @@ func (s *Server) deleteURL(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "url_id is in wrong format"})
 		return
 	}
-	if err := s.shortenSrv.Delete(ctx, id); err != nil {
-		switch err {
-		case db.ErrNoRows:
-			log.Errorf("deleteURL: cannot find url_id: %v", urlID)
-			ctx.JSON(http.StatusNotFound, gin.H{"message": "requested url_id not found"})
-		default:
-			log.Errorf("deleteURL: shorten url for url_id: %v, err: %v", urlID, err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
-		}
+	if err := s.shortenSrv.Delete(ctx, id); err != nil && err != db.ErrNoRows {
+		log.Errorf("deleteURL: shorten url for url_id: %v, err: %v", urlID, err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
 		return
 	}
 	log.Infof("deleteURL: short url with id: %v has been successfully deleted", urlID)

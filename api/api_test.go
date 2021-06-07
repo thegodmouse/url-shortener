@@ -215,7 +215,7 @@ func (s *APITestSuite) TestDeleteURL_withShortenerError() {
 			id:           int64(123),
 			urlID:        "123",
 			shortenerErr: db.ErrNoRows,
-			expCode:      http.StatusNotFound,
+			expCode:      http.StatusNoContent,
 		},
 		{
 			id:           int64(789),
