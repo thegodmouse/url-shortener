@@ -42,8 +42,7 @@ func (s *SQLTestSuite) TestCreate() {
 	url := "http://localhost:5566"
 	createdAt := time.Now().Round(time.Second)
 	expireAt := createdAt.Add(time.Minute).Round(time.Second)
-	expRows := sqlmock.NewRows([]string{"id", "url", "created_at", "expire_at", "is_deleted"}).
-		AddRow(id, url, createdAt, expireAt, false)
+
 	s.mock.
 		ExpectBegin()
 	s.mock.
@@ -53,11 +52,6 @@ func (s *SQLTestSuite) TestCreate() {
 		ExpectExec("INSERT INTO url_shortener.short_urls \\(url, expire_at\\) VALUES \\(\\?, \\?\\)").
 		WithArgs(url, expireAt).
 		WillReturnResult(sqlmock.NewResult(1, 1))
-	s.mock.
-		ExpectQuery(
-			"SELECT id, url, created_at, expire_at, is_deleted FROM url_shortener\\.short_urls").
-		WithArgs(id).
-		WillReturnRows(expRows)
 	s.mock.
 		ExpectCommit()
 
@@ -131,8 +125,7 @@ func (s *SQLTestSuite) TestCreate_withQueryRecyclableError() {
 	url := "http://localhost:5566"
 	createdAt := time.Now().Round(time.Second)
 	expireAt := createdAt.Add(time.Minute).Round(time.Second)
-	expRows := sqlmock.NewRows([]string{"id", "url", "created_at", "expire_at", "is_deleted"}).
-		AddRow(id, url, createdAt, expireAt, false)
+
 	s.mock.
 		ExpectBegin()
 	s.mock.
@@ -142,11 +135,6 @@ func (s *SQLTestSuite) TestCreate_withQueryRecyclableError() {
 		ExpectExec("INSERT INTO url_shortener.short_urls \\(url, expire_at\\) VALUES \\(\\?, \\?\\)").
 		WithArgs(url, expireAt).
 		WillReturnResult(sqlmock.NewResult(1, 1))
-	s.mock.
-		ExpectQuery(
-			"SELECT id, url, created_at, expire_at, is_deleted FROM url_shortener\\.short_urls").
-		WithArgs(id).
-		WillReturnRows(expRows)
 	s.mock.
 		ExpectCommit()
 
@@ -271,45 +259,13 @@ func (s *SQLTestSuite) TestCreate_withGetLastInsertIDError() {
 	s.Nil(gotRecord)
 }
 
-func (s *SQLTestSuite) TestCreate_withQueryShortError() {
-	sqlStore := NewSQLStore(s.db)
-
-	id := int64(1)
-	url := "http://localhost:5566"
-	createdAt := time.Now().Round(time.Second)
-	expireAt := createdAt.Add(time.Minute).Round(time.Second)
-	s.mock.
-		ExpectBegin()
-	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1").
-		WillReturnError(sql.ErrNoRows)
-	s.mock.
-		ExpectExec("INSERT INTO url_shortener.short_urls \\(url, expire_at\\) VALUES \\(\\?, \\?\\)").
-		WithArgs(url, expireAt).
-		WillReturnResult(sqlmock.NewResult(1, 1))
-	s.mock.
-		ExpectQuery(
-			"SELECT id, url, created_at, expire_at, is_deleted FROM url_shortener\\.short_urls").
-		WithArgs(id).
-		WillReturnError(errors.New("unknown query error"))
-	s.mock.
-		ExpectRollback()
-	// SUT
-	gotRecord, gotErr := sqlStore.Create(context.Background(), url, expireAt)
-
-	s.Error(gotErr)
-	s.Nil(gotRecord)
-}
-
 func (s *SQLTestSuite) TestCreate_withCommitError() {
 	sqlStore := NewSQLStore(s.db)
 
-	id := int64(1)
 	url := "http://localhost:5566"
 	createdAt := time.Now().Round(time.Second)
 	expireAt := createdAt.Add(time.Minute).Round(time.Second)
-	expRows := sqlmock.NewRows([]string{"id", "url", "created_at", "expire_at", "is_deleted"}).
-		AddRow(id, url, createdAt, expireAt, false)
+
 	s.mock.
 		ExpectBegin()
 	s.mock.
@@ -319,11 +275,6 @@ func (s *SQLTestSuite) TestCreate_withCommitError() {
 		ExpectExec("INSERT INTO url_shortener.short_urls \\(url, expire_at\\) VALUES \\(\\?, \\?\\)").
 		WithArgs(url, expireAt).
 		WillReturnResult(sqlmock.NewResult(1, 1))
-	s.mock.
-		ExpectQuery(
-			"SELECT id, url, created_at, expire_at, is_deleted FROM url_shortener\\.short_urls").
-		WithArgs(id).
-		WillReturnRows(expRows)
 	s.mock.
 		ExpectCommit().
 		WillReturnError(errors.New("unknown commit error"))

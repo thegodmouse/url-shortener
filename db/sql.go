@@ -23,8 +23,12 @@ func (s *sqlStore) Create(ctx context.Context, url string, expireAt time.Time) (
 	var tx *sql.Tx
 	var id int64
 	var err error
-	var shortURL *record.ShortURL
-
+	shortURL := &record.ShortURL{
+		CreatedAt: time.Now().Round(time.Second),
+		ExpireAt:  expireAt,
+		URL:       url,
+		IsDeleted: false,
+	}
 	tx, err = s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -35,13 +39,7 @@ func (s *sqlStore) Create(ctx context.Context, url string, expireAt time.Time) (
 	err = row.Scan(&id)
 	if err == nil {
 		// recycle urls from recyclable_urls table
-		shortURL = &record.ShortURL{
-			ID:        id,
-			CreatedAt: time.Now().Round(time.Second),
-			ExpireAt:  expireAt,
-			URL:       url,
-			IsDeleted: false,
-		}
+		shortURL.ID = id
 		if _, err := tx.Exec("DELETE FROM url_shortener.recyclable_urls WHERE id = ?", id); err != nil {
 			return nil, err
 		}
@@ -60,19 +58,7 @@ func (s *sqlStore) Create(ctx context.Context, url string, expireAt time.Time) (
 		if err != nil {
 			return nil, err
 		}
-
-		row = tx.QueryRow("SELECT id, url, created_at, expire_at, is_deleted FROM url_shortener.short_urls WHERE id = ?", id)
-
-		shortURL = &record.ShortURL{}
-		if err := row.Scan(
-			&shortURL.ID,
-			&shortURL.URL,
-			&shortURL.CreatedAt,
-			&shortURL.ExpireAt,
-			&shortURL.IsDeleted,
-		); err != nil {
-			return nil, err
-		}
+		shortURL.ID = id
 	}
 	if err := tx.Commit(); err != nil {
 		return nil, err
