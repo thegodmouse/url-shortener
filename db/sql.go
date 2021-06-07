@@ -67,7 +67,8 @@ func (s *sqlStore) Create(ctx context.Context, url string, expireAt time.Time) (
 }
 
 func (s *sqlStore) Get(ctx context.Context, id int64) (*record.ShortURL, error) {
-	row := s.db.QueryRow("SELECT id, url, created_at, expire_at, is_deleted FROM url_shortener.short_urls WHERE id = ?", id)
+	row := s.db.QueryRowContext(ctx,
+		"SELECT id, url, created_at, expire_at, is_deleted FROM url_shortener.short_urls WHERE id = ?", id)
 
 	shortURL := &record.ShortURL{}
 	if err := row.Scan(
@@ -82,7 +83,36 @@ func (s *sqlStore) Get(ctx context.Context, id int64) (*record.ShortURL, error) 
 	return shortURL, nil
 }
 
+func (s *sqlStore) GetExpiredIDs(ctx context.Context) (<-chan int64, error) {
+	now := time.Now().Round(time.Second)
+	rows, err := s.db.QueryContext(ctx, "SELECT id FROM url_shortener.short_urls WHERE expire_at < ?", now)
+	if err != nil {
+		return nil, err
+	}
+	ch := make(chan int64)
+	go func() {
+		defer close(ch)
+		defer rows.Close()
+		for rows.Next() {
+			var id int64
+			if err := rows.Scan(&id); err != nil {
+				return
+			}
+			ch <- id
+		}
+	}()
+	return ch, nil
+}
+
+func (s *sqlStore) Expire(ctx context.Context, id int64) error {
+	return s.delete(ctx, id, true)
+}
+
 func (s *sqlStore) Delete(ctx context.Context, id int64) error {
+	return s.delete(ctx, id, false)
+}
+
+func (s *sqlStore) delete(ctx context.Context, id int64, onExpire bool) error {
 	var tx *sql.Tx
 	var err error
 
@@ -102,7 +132,14 @@ func (s *sqlStore) Delete(ctx context.Context, id int64) error {
 	if err != ErrNoRows {
 		return err
 	}
-	row = tx.QueryRow("SELECT id FROM url_shortener.short_urls WHERE id = ?", id)
+
+	if onExpire {
+		row = tx.QueryRow("SELECT id FROM url_shortener.short_urls WHERE id = ? AND expire_at < ?",
+			id, time.Now().Round(time.Second))
+	} else {
+		row = tx.QueryRow("SELECT id FROM url_shortener.short_urls WHERE id = ?", id)
+	}
+
 	var shortID int64
 	err = row.Scan(&shortID)
 	if err != nil {

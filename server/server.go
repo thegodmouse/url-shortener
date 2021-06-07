@@ -1,11 +1,12 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"flag"
-	"log"
 
 	"github.com/go-sql-driver/mysql"
+	log "github.com/sirupsen/logrus"
 	"github.com/thegodmouse/url-shortener/api"
 	"github.com/thegodmouse/url-shortener/cache"
 	"github.com/thegodmouse/url-shortener/config"
@@ -13,6 +14,7 @@ import (
 	"github.com/thegodmouse/url-shortener/db"
 	"github.com/thegodmouse/url-shortener/services/redirect"
 	"github.com/thegodmouse/url-shortener/services/shortener"
+	"github.com/thegodmouse/url-shortener/util"
 )
 
 func main() {
@@ -40,5 +42,15 @@ func main() {
 
 	server := api.NewServer(*config.RedirectServeURL, shortenSrv, redirectSrv, converter.NewConverter())
 
-	log.Fatal(server.Serve(":" + *config.ServerPort))
+	// start checking for expire short urls
+	ctx, cancel := context.WithCancel(context.Background())
+
+	done := util.DeleteExpiredURLs(ctx, dbStore, cacheStore)
+
+	if err := server.Serve(":" + *config.ServerPort); err != nil {
+		log.Errorf("Server: serve err: %v, at port: %v", err, *config.ServerPort)
+	}
+	cancel()
+	// wait for done
+	<-done
 }

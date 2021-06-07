@@ -340,11 +340,11 @@ func (s *SQLTestSuite) TestDelete() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = ?").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(sql.ErrNoRows)
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.short_urls WHERE id = ?").
+		ExpectQuery("SELECT id FROM url_shortener\\.short_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(id))
 	s.mock.
@@ -372,7 +372,7 @@ func (s *SQLTestSuite) TestDelete_withAlreadyDeleted() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = ?").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnRows(expRows)
 	s.mock.
@@ -407,7 +407,7 @@ func (s *SQLTestSuite) TestDelete_withQueryRecyclableError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = ?").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(errors.New("unknown query error"))
 	s.mock.
@@ -427,11 +427,11 @@ func (s *SQLTestSuite) TestDelete_withQueryShortError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = ?").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(sql.ErrNoRows)
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.short_urls WHERE id = ?").
+		ExpectQuery("SELECT id FROM url_shortener\\.short_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(errors.New("unknown query error"))
 	s.mock.
@@ -451,11 +451,11 @@ func (s *SQLTestSuite) TestDelete_withUpdateShortError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = ?").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(sql.ErrNoRows)
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.short_urls WHERE id = ?").
+		ExpectQuery("SELECT id FROM url_shortener\\.short_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(id))
 	s.mock.
@@ -479,11 +479,11 @@ func (s *SQLTestSuite) TestDelete_withInsertRecyclableError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = ?").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(sql.ErrNoRows)
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.short_urls WHERE id = ?").
+		ExpectQuery("SELECT id FROM url_shortener\\.short_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(id))
 	s.mock.
@@ -511,11 +511,11 @@ func (s *SQLTestSuite) TestDelete_withCommitError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = ?").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(sql.ErrNoRows)
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.short_urls WHERE id = ?").
+		ExpectQuery("SELECT id FROM url_shortener\\.short_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(id))
 	s.mock.
@@ -536,4 +536,102 @@ func (s *SQLTestSuite) TestDelete_withCommitError() {
 	gotErr := sqlStore.Delete(context.Background(), id)
 
 	s.Error(gotErr)
+}
+
+func (s *SQLTestSuite) TestExpire() {
+	sqlStore := NewSQLStore(s.db)
+
+	id := int64(12345)
+
+	s.mock.
+		ExpectBegin()
+	s.mock.
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
+		WithArgs(id).
+		WillReturnError(sql.ErrNoRows)
+	s.mock.
+		ExpectQuery("SELECT id FROM url_shortener\\.short_urls WHERE id = \\? AND expire_at < \\?").
+		WithArgs(id, sqlmock.AnyArg()).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(id))
+	s.mock.
+		ExpectExec("UPDATE url_shortener.short_urls SET is_deleted = true WHERE id = \\?").
+		WithArgs(id).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	s.mock.
+		ExpectExec("INSERT INTO url_shortener.recyclable_urls \\(id\\) VALUES \\(\\?\\)").
+		WithArgs(id).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	s.mock.
+		ExpectCommit()
+	// SUT
+	gotErr := sqlStore.Expire(context.Background(), id)
+
+	s.NoError(gotErr)
+}
+
+func (s *SQLTestSuite) TestGetExpiredIDs() {
+	sqlStore := NewSQLStore(s.db)
+
+	expRows := sqlmock.NewRows([]string{"id"}).
+		AddRow(int64(1)).
+		AddRow(int64(2)).
+		AddRow(int64(3))
+
+	s.mock.
+		ExpectQuery("SELECT id FROM url_shortener.short_urls WHERE expire_at < \\?").
+		WithArgs(sqlmock.AnyArg()).
+		WillReturnRows(expRows)
+
+	gotCh, gotErr := sqlStore.GetExpiredIDs(context.Background())
+
+	s.NoError(gotErr)
+	var result []int64
+	for id := range gotCh {
+		result = append(result, id)
+	}
+	s.Contains(result, int64(1))
+	s.Contains(result, int64(2))
+	s.Contains(result, int64(3))
+	s.Len(result, 3)
+}
+
+func (s *SQLTestSuite) TestGetExpiredIDs_withQueryError() {
+	sqlStore := NewSQLStore(s.db)
+
+	s.mock.
+		ExpectQuery("SELECT id FROM url_shortener.short_urls WHERE expire_at < \\?").
+		WithArgs(sqlmock.AnyArg()).
+		WillReturnError(errors.New("unknown query error"))
+
+	gotCh, gotErr := sqlStore.GetExpiredIDs(context.Background())
+
+	s.Error(gotErr)
+	s.Nil(gotCh)
+}
+
+func (s *SQLTestSuite) TestGetExpiredIDs_withScanError() {
+	sqlStore := NewSQLStore(s.db)
+
+	expRows := sqlmock.NewRows([]string{"id"}).
+		AddRow(int64(1)).
+		AddRow(int64(2)).
+		AddRow(int64(3)).
+		RowError(2, errors.New("scan error after second row"))
+
+	s.mock.
+		ExpectQuery("SELECT id FROM url_shortener.short_urls WHERE expire_at < \\?").
+		WithArgs(sqlmock.AnyArg()).
+		WillReturnRows(expRows)
+
+	gotCh, gotErr := sqlStore.GetExpiredIDs(context.Background())
+
+	s.NoError(gotErr)
+	var result []int64
+	for id := range gotCh {
+		result = append(result, id)
+	}
+	s.Contains(result, int64(1))
+	s.Contains(result, int64(2))
+	s.NotContains(result, int64(3))
+	s.Len(result, 2)
 }

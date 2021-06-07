@@ -65,6 +65,20 @@ func (mr *MockStoreMockRecorder) Delete(ctx, id interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockStore)(nil).Delete), ctx, id)
 }
 
+// Expire mocks base method.
+func (m *MockStore) Expire(ctx context.Context, id int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Expire", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Expire indicates an expected call of Expire.
+func (mr *MockStoreMockRecorder) Expire(ctx, id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Expire", reflect.TypeOf((*MockStore)(nil).Expire), ctx, id)
+}
+
 // Get mocks base method.
 func (m *MockStore) Get(ctx context.Context, id int64) (*record.ShortURL, error) {
 	m.ctrl.T.Helper()
@@ -78,4 +92,19 @@ func (m *MockStore) Get(ctx context.Context, id int64) (*record.ShortURL, error)
 func (mr *MockStoreMockRecorder) Get(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockStore)(nil).Get), ctx, id)
+}
+
+// GetExpiredIDs mocks base method.
+func (m *MockStore) GetExpiredIDs(ctx context.Context) (<-chan int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetExpiredIDs", ctx)
+	ret0, _ := ret[0].(<-chan int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetExpiredIDs indicates an expected call of GetExpiredIDs.
+func (mr *MockStoreMockRecorder) GetExpiredIDs(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExpiredIDs", reflect.TypeOf((*MockStore)(nil).GetExpiredIDs), ctx)
 }
