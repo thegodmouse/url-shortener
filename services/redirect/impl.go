@@ -10,6 +10,7 @@ import (
 	"github.com/thegodmouse/url-shortener/util"
 )
 
+// NewService returns a new redirect.Service with default implementation.
 func NewService(dbStore db.Store, cacheStore cache.Store) *serviceImpl {
 	return &serviceImpl{
 		dbStore:    dbStore,
@@ -22,28 +23,30 @@ type serviceImpl struct {
 	cacheStore cache.Store
 }
 
-// RedirectTo returns the original url of the urlID if exists.
+// RedirectTo returns the original url with given id.
 func (s *serviceImpl) RedirectTo(ctx context.Context, id int64) (string, error) {
 	shortURL, isCached, err := s.getShortURL(ctx, id)
 	if err != nil {
+		log.Errorf("serviceImpl.RedirectTo: get short url record err: %v, with id: %v", err, id)
 		return "", err
 	}
 	if !isCached {
+		log.Infof("serviceImpl.RedirectTo: not found in cache, try to set cache with id: %v", id)
 		if err := s.cacheStore.Set(ctx, id, shortURL); err != nil {
-			log.Errorf("getShortURL: cahce store set err: %v, id: %v", err, id)
+			log.Errorf("serviceImpl.RedirectTo: cahce store set err: %v, with id: %v", err, id)
 		}
 	}
+	// check if the record is expired or deleted
 	if util.IsRecordExpired(shortURL) || util.IsRecordDeleted(shortURL) {
+		log.Errorf("serviceImpl.RedirectTo: short url is expired or deleted, url record: %+v", shortURL)
 		return "", util.ErrURLNotFound
 	}
+	log.Infof("serviceImpl.RedirectTo: successfully get the original url from the record: %v, with id: %v", shortURL, id)
 	return shortURL.URL, nil
 }
 
 func (s *serviceImpl) getShortURL(ctx context.Context, id int64) (*record.ShortURL, bool, error) {
-	var err error
-	var shortURL *record.ShortURL
-
-	shortURL, err = s.cacheStore.Get(ctx, id)
+	shortURL, err := s.cacheStore.Get(ctx, id)
 	if err == nil {
 		// cache hit, return the result
 		return shortURL, true, nil
