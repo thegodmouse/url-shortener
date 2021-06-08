@@ -142,3 +142,29 @@ func (s *RedisTestSuite) TestSetError() {
 
 	s.Error(gotErr)
 }
+
+func (s *RedisTestSuite) TestMakeKey() {
+	redisStore := newRedisStore(s.cache)
+
+	testCases := []struct {
+		id     int64
+		expKey string
+	}{
+		{
+			id:     int64(0),
+			expKey: "id#0",
+		},
+		{
+			id:     int64(123),
+			expKey: "id#123",
+		},
+		{
+			id:     int64(-456),
+			expKey: "id#-456",
+		},
+	}
+
+	for _, testCase := range testCases {
+		s.Equal(testCase.expKey, redisStore.makeKey(testCase.id))
+	}
+}
