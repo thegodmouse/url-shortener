@@ -21,6 +21,7 @@ import (
 func main() {
 	flag.Parse()
 
+	// initialize database and cache store handlers
 	sqlCfg := mysql.Config{
 		User:                 "root",
 		Passwd:               *config.MySQLRootPassword,
@@ -34,10 +35,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 	dbStore := db.NewSQLStore(sqlDB)
 	cacheStore := cache.NewRedisStore(*config.RedisServerAddr, *config.RedisAdminPassword)
 
+	// initialize services for shorten and redirect urls
 	shortenSrv := shortener.NewService(dbStore, cacheStore)
 	redirectSrv := redirect.NewService(dbStore, cacheStore)
 
@@ -45,9 +46,9 @@ func main() {
 
 	// start checking for expire short urls
 	ctx, cancel := context.WithCancel(context.Background())
-
 	done := util.DeleteExpiredURLs(ctx, dbStore, 10*time.Minute)
 
+	// start serving server
 	if err := server.Serve(":" + *config.ServerPort); err != nil {
 		log.Errorf("Server: serve err: %v, at port: %v", err, *config.ServerPort)
 	}
