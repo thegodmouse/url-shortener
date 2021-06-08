@@ -27,21 +27,21 @@ type serviceImpl struct {
 func (s *serviceImpl) RedirectTo(ctx context.Context, id int64) (string, error) {
 	shortURL, isCached, err := s.getShortURL(ctx, id)
 	if err != nil {
-		log.Errorf("serviceImpl.RedirectTo: get short url record err: %v, with id: %v", err, id)
+		log.Errorf("redirect.RedirectTo: get short url record err: %v, with id: %v", err, id)
 		return "", err
 	}
 	if !isCached {
-		log.Infof("serviceImpl.RedirectTo: not found in cache, try to set cache with id: %v", id)
+		log.Infof("redirect.RedirectTo: not found in cache, try to set cache with id: %v", id)
 		if err := s.cacheStore.Set(ctx, id, shortURL); err != nil {
-			log.Errorf("serviceImpl.RedirectTo: cahce store set err: %v, with id: %v", err, id)
+			log.Errorf("redirect.RedirectTo: cahce store set err: %v, with id: %v", err, id)
 		}
 	}
 	// check if the record is expired or deleted
 	if util.IsRecordExpired(shortURL) || util.IsRecordDeleted(shortURL) {
-		log.Errorf("serviceImpl.RedirectTo: short url is expired or deleted, url record: %+v", shortURL)
+		log.Errorf("redirect.RedirectTo: short url is expired or deleted, url record: %+v", shortURL)
 		return "", util.ErrURLNotFound
 	}
-	log.Infof("serviceImpl.RedirectTo: successfully get the original url from the record: %v, with id: %v", shortURL, id)
+	log.Infof("redirect.RedirectTo: successfully get the original url from the record: %v, with id: %v", shortURL, id)
 	return shortURL.URL, nil
 }
 
@@ -53,7 +53,7 @@ func (s *serviceImpl) getShortURL(ctx context.Context, id int64) (*record.ShortU
 	}
 	if err != cache.ErrKeyNotFound {
 		// suppress error
-		log.Errorf("getShortURL: cache store get err: %v, id: %v", err, id)
+		log.Errorf("redirect.getShortURL: cache store get err: %v, id: %v", err, id)
 	}
 	shortURL, err = s.dbStore.Get(ctx, id)
 	if err != nil {
