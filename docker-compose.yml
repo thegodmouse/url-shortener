@@ -2,7 +2,7 @@ version: "3"
 
 services:
   server:
-    image: url_shortener:test
+    image: url_shortener
     container_name: url_shortener_server
     environment:
       SERVER_PORT: ${SERVER_PORT:-80}
