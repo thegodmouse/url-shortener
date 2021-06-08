@@ -36,7 +36,7 @@ func main() {
 	}
 
 	dbStore := db.NewSQLStore(sqlDB)
-	cacheStore := cache.NewRedisStore(*config.RedisAddr, *config.RedisAdminPassword)
+	cacheStore := cache.NewRedisStore(*config.RedisServerAddr, *config.RedisAdminPassword)
 
 	shortenSrv := shortener.NewService(dbStore, cacheStore)
 	redirectSrv := redirect.NewService(dbStore, cacheStore)
