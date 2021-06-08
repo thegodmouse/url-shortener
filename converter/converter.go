@@ -3,8 +3,9 @@ package converter
 import (
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"strconv"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -12,12 +13,12 @@ var (
 	ErrURLFormat = errors.New("url id is in wrong format")
 )
 
-// Converter defines the interface for the conversion between id and short url id.
+// Converter defines the interface for the conversion between id and url id.
 // These two functions should be inverses of each other.
 type Converter interface {
 	// ConvertToID converts
-	ConvertToID(shortURLID string) (int64, error)
-	ConvertToShortURL(id int64) (string, error)
+	ConvertToID(urlID string) (int64, error)
+	ConvertToURLID(id int64) (string, error)
 }
 
 // NewConverter returns a default converter which implements Converter
@@ -27,16 +28,16 @@ func NewConverter() *converterImpl {
 
 type converterImpl struct{}
 
-// ConvertToShortURL converts an id to the unique short url id.
-func (c *converterImpl) ConvertToShortURL(id int64) (string, error) {
+// ConvertToURLID converts an id to the unique short url id.
+func (c *converterImpl) ConvertToURLID(id int64) (string, error) {
 	return fmt.Sprintf("%d", id), nil
 }
 
-// ConvertToID converts a short url id to the unique id.
-func (c *converterImpl) ConvertToID(shortURLID string) (int64, error) {
-	id, err := strconv.ParseInt(shortURLID, 10, 64)
+// ConvertToID converts an url id to the unique id.
+func (c *converterImpl) ConvertToID(urlID string) (int64, error) {
+	id, err := strconv.ParseInt(urlID, 10, 64)
 	if err != nil {
-		log.Errorf("converterImpl.ConvertToID: convert err: %v, with short url id: %v", err, shortURLID)
+		log.Errorf("converterImpl.ConvertToID: convert err: %v, with short url id: %v", err, urlID)
 		return 0, ErrURLFormat
 	}
 	return id, err

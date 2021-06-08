@@ -34,31 +34,31 @@ func (m *MockConverter) EXPECT() *MockConverterMockRecorder {
 }
 
 // ConvertToID mocks base method.
-func (m *MockConverter) ConvertToID(shortURL string) (int64, error) {
+func (m *MockConverter) ConvertToID(urlID string) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ConvertToID", shortURL)
+	ret := m.ctrl.Call(m, "ConvertToID", urlID)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ConvertToID indicates an expected call of ConvertToID.
-func (mr *MockConverterMockRecorder) ConvertToID(shortURL interface{}) *gomock.Call {
+func (mr *MockConverterMockRecorder) ConvertToID(urlID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConvertToID", reflect.TypeOf((*MockConverter)(nil).ConvertToID), shortURL)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConvertToID", reflect.TypeOf((*MockConverter)(nil).ConvertToID), urlID)
 }
 
-// ConvertToShortURL mocks base method.
-func (m *MockConverter) ConvertToShortURL(id int64) (string, error) {
+// ConvertToURLID mocks base method.
+func (m *MockConverter) ConvertToURLID(id int64) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ConvertToShortURL", id)
+	ret := m.ctrl.Call(m, "ConvertToURLID", id)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ConvertToShortURL indicates an expected call of ConvertToShortURL.
-func (mr *MockConverterMockRecorder) ConvertToShortURL(id interface{}) *gomock.Call {
+// ConvertToURLID indicates an expected call of ConvertToURLID.
+func (mr *MockConverterMockRecorder) ConvertToURLID(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConvertToShortURL", reflect.TypeOf((*MockConverter)(nil).ConvertToShortURL), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConvertToURLID", reflect.TypeOf((*MockConverter)(nil).ConvertToURLID), id)
 }

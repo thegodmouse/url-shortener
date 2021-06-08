@@ -61,7 +61,7 @@ func (s *APITestSuite) TestCreateURL() {
 		Return(id, nil)
 	s.mockConv.
 		EXPECT().
-		ConvertToShortURL(gomock.Eq(id)).
+		ConvertToURLID(gomock.Eq(id)).
 		Return(urlID, nil)
 
 	// create test context
@@ -152,7 +152,7 @@ func (s *APITestSuite) TestCreateURL_withConvertError() {
 		Return(id, nil)
 	s.mockConv.
 		EXPECT().
-		ConvertToShortURL(gomock.Eq(id)).
+		ConvertToURLID(gomock.Eq(id)).
 		Return("", errors.New("unknown convert error"))
 
 	// create test context

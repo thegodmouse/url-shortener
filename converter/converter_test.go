@@ -42,7 +42,7 @@ func (s *ConverterTestSuite) TestConvertToID_withFormatError() {
 func (s *ConverterTestSuite) TestConvertToShortURL() {
 	id := int64(12345)
 
-	gotShortURL, gotErr := s.conv.ConvertToShortURL(id)
+	gotShortURL, gotErr := s.conv.ConvertToURLID(id)
 
 	s.NoError(gotErr)
 	s.Equal("12345", gotShortURL)

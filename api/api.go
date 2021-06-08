@@ -79,7 +79,7 @@ func (s *Server) createURL(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
 		return
 	}
-	urlID, err = s.conv.ConvertToShortURL(id)
+	urlID, err = s.conv.ConvertToURLID(id)
 	if err != nil {
 		log.Errorf("createURL: convert id to url_id err: %v, id: %v", err, id)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
