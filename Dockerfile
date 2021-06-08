@@ -13,7 +13,7 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 COPY --from=builder /url_shortener/server .
-COPY ./docker/start.sh .
+COPY ./scripts/start.sh .
 RUN chmod +x ./start.sh
 
 CMD ["./start.sh"]
