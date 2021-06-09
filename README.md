@@ -20,7 +20,6 @@
 
 - Docker (20.10.6):
     - required for running standalone url-shortener server with local cache and database
-    - required for end-to-end tests
 
 - Python (3.8):
     - required for end-to-end tests
@@ -58,9 +57,11 @@ url_shortener_server        ./start.sh                       Up             0.0.
 
 ```
 
-- The server will listen at `http://localhost:80` by default. See different configurations [here](#How-to-configure).
+- The server will listen at `http://localhost:80` by default. See default and different configurations [here](#How-to-configure).
 
-### 2. Build from source:
+### 2. Build from source: 
+
+* Note: Need to set up MySQL and Redis server manually
 
 - Run `init.sql` SQL script on the `mysql` server
 
@@ -80,7 +81,7 @@ cd script
 chmod +x build.sh start.sh
 ```
 
-- Build and start the server with default configurations. See different configurations [here](#How-to-configure).
+- Build and start the server with default configurations. See default and different configurations [here](#How-to-configure).
 
 ```shell
 ./build.sh && ./start.sh
@@ -99,7 +100,7 @@ chmod +x build.sh start.sh
 
 ## How to run end-to-end tests
 
-* NOTE: You need to start an `url_shortener` server first.
+* NOTE: You need to start an `url_shortener` server first. [How to start a server.](#How-to-run)
 
 Install required python packages.
 

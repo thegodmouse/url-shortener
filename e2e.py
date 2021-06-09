@@ -71,3 +71,7 @@ class End2EndTest(unittest.TestCase):
         self.assertEqual(HTTPStatus.SEE_OTHER, resp.history[0].status_code)
         self.assertEqual(short_url_new, resp.history[0].url)
         self.assertEqual(original_url_new, resp.history[0].headers.get('location'))
+
+        # delete the url
+        resp = requests.delete('{}{}/{}'.format(self.endpoint, self.urlV1APIBasePath, url_id))
+        self.assertEqual(HTTPStatus.NO_CONTENT, resp.status_code)
