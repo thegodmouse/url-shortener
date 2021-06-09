@@ -26,6 +26,8 @@
 
 - MySQL (8.0.25)
 
+- Redis (6.2.4)
+
 ## How to run
 
 ### 1. Standalone with docker-compose
@@ -57,9 +59,10 @@ url_shortener_server        ./start.sh                       Up             0.0.
 
 ```
 
-- The server will listen at `http://localhost:80` by default. See default and different configurations [here](#How-to-configure).
+- The server will listen at `http://localhost:80` by default. See default and different
+  configurations [here](#How-to-configure).
 
-### 2. Build from source: 
+### 2. Build from source:
 
 * Note: Need to set up MySQL and Redis server manually
 
@@ -81,7 +84,8 @@ cd script
 chmod +x build.sh start.sh
 ```
 
-- Build and start the server with default configurations. See default and different configurations [here](#How-to-configure).
+- Build and start the server with default configurations. See default and different
+  configurations [here](#How-to-configure).
 
 ```shell
 ./build.sh && ./start.sh
