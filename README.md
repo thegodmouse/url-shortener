@@ -35,12 +35,13 @@
 - Go to the project root directory, and build the docker image for `url_shortener`
 
 ```shell
-URL_SHORTENER_IMAGE=url_shortener:demo
+export URL_SHORTENER_IMAGE=url_shortener:demo
 
 docker build -t ${URL_SHORTENER_IMAGE} .
 ```
 
-- Start the docker-compose, and it will use environment variable `URL_SHORTENER_IMAGE` as the image name for `url_shortener`
+- Start the docker-compose, and it will use environment variable `URL_SHORTENER_IMAGE` as the image name
+  for `url_shortener`
 
 ```shell
 docker-compose up
