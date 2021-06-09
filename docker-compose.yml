@@ -15,7 +15,7 @@ services:
       - db
       - cache
     ports:
-      - 80:80
+      - 80:${SERVER_PORT:-80}
     networks:
       - url_shortener_application
 
