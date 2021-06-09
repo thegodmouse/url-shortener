@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,18 +22,18 @@ const (
 )
 
 func NewServer(
-	hostname string,
+	redirectServeEndpoint string,
 	shortenSrv shortener.Service,
 	redirectSrv redirect.Service,
 	conv converter.Converter,
 ) *Server {
 	router := gin.Default()
 	server := &Server{
-		redirectServeURL: hostname,
-		router:           router,
-		shortenSrv:       shortenSrv,
-		redirectSrv:      redirectSrv,
-		conv:             conv,
+		redirectServeEndpoint: strings.TrimRight(redirectServeEndpoint, "/"),
+		router:                router,
+		shortenSrv:            shortenSrv,
+		redirectSrv:           redirectSrv,
+		conv:                  conv,
 	}
 	shortenerGroupV1 := router.Group(ShortenerPathV1)
 	shortenerGroupV1.POST("", server.createURL)
@@ -42,11 +43,11 @@ func NewServer(
 }
 
 type Server struct {
-	redirectServeURL string
-	shortenSrv       shortener.Service
-	redirectSrv      redirect.Service
-	conv             converter.Converter
-	router           *gin.Engine
+	redirectServeEndpoint string
+	shortenSrv            shortener.Service
+	redirectSrv           redirect.Service
+	conv                  converter.Converter
+	router                *gin.Engine
 }
 
 func (s *Server) Serve(addr string) error {
@@ -94,7 +95,7 @@ func (s *Server) createURL(ctx *gin.Context) {
 	log.Infof("createURL: generated short url: %v, request: %+v", urlID, createURLRequest)
 	ctx.JSON(http.StatusOK, &dto.CreateURLResponse{
 		ID:       urlID,
-		ShortURL: fmt.Sprintf("%v/%v", s.redirectServeURL, urlID),
+		ShortURL: fmt.Sprintf("%v/%v", s.redirectServeEndpoint, urlID),
 	})
 }
 

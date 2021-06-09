@@ -42,7 +42,12 @@ func main() {
 	shortenSrv := shortener.NewService(dbStore, cacheStore)
 	redirectSrv := redirect.NewService(dbStore, cacheStore)
 
-	server := api.NewServer(*config.RedirectServeURL, shortenSrv, redirectSrv, converter.NewConverter())
+	server := api.NewServer(
+		*config.RedirectServeEndpoint,
+		shortenSrv,
+		redirectSrv,
+		converter.NewConverter(),
+	)
 
 	// start checking for expire short urls
 	ctx, cancel := context.WithCancel(context.Background())

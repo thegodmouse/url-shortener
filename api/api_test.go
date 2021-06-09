@@ -30,14 +30,14 @@ type APITestSuite struct {
 
 	ctrl *gomock.Controller
 
-	mockShortener *ms.MockService
-	mockRedirect  *mr.MockService
-	mockConv      *mcv.MockConverter
-	hostname      string
+	mockShortener         *ms.MockService
+	mockRedirect          *mr.MockService
+	mockConv              *mcv.MockConverter
+	redirectServeEndpoint string
 }
 
 func (s *APITestSuite) SetupSuite() {
-	s.hostname = "localhost:5566"
+	s.redirectServeEndpoint = "http://localhost:5566"
 	s.ctrl = gomock.NewController(s.T())
 }
 
@@ -47,14 +47,20 @@ func (s *APITestSuite) SetupTest() {
 	s.mockConv = mcv.NewMockConverter(s.ctrl)
 }
 
+func (s *APITestSuite) TestNewServer() {
+	server := NewServer("http://localhost:5678/", s.mockShortener, s.mockRedirect, s.mockConv)
+
+	s.Equal("http://localhost:5678", server.redirectServeEndpoint)
+}
+
 func (s *APITestSuite) TestCreateURL() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
+	server := NewServer(s.redirectServeEndpoint, s.mockShortener, s.mockRedirect, s.mockConv)
 
 	url := "http://localhost:7788"
 	expireAt := time.Now().Add(time.Minute).Round(time.Second)
 	id := int64(12345)
 	urlID := "12345"
-	expectShortURL := s.hostname + "/" + urlID
+	expectShortURL := s.redirectServeEndpoint + "/" + urlID
 	s.mockShortener.
 		EXPECT().
 		Shorten(gomock.Any(), gomock.Eq(url), gomock.Eq(expireAt)).
@@ -79,7 +85,7 @@ func (s *APITestSuite) TestCreateURL() {
 }
 
 func (s *APITestSuite) TestCreateURL_withBadRequest() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
+	server := NewServer(s.redirectServeEndpoint, s.mockShortener, s.mockRedirect, s.mockConv)
 
 	testCases := []struct {
 		body io.Reader
@@ -131,7 +137,7 @@ func (s *APITestSuite) TestCreateURL_withBadRequest() {
 }
 
 func (s *APITestSuite) TestCreateURL_withShortenerError() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
+	server := NewServer(s.redirectServeEndpoint, s.mockShortener, s.mockRedirect, s.mockConv)
 
 	url := "http://localhost:7788"
 	expireAt := time.Now().Add(time.Minute).Round(time.Second)
@@ -153,7 +159,7 @@ func (s *APITestSuite) TestCreateURL_withShortenerError() {
 }
 
 func (s *APITestSuite) TestCreateURL_withConvertError() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
+	server := NewServer(s.redirectServeEndpoint, s.mockShortener, s.mockRedirect, s.mockConv)
 
 	url := "http://localhost:7788"
 	expireAt := time.Now().Add(time.Minute).Round(time.Second)
@@ -189,7 +195,7 @@ func (s *APITestSuite) makeTestCreateURLRequestBody(url string, expireAtStr stri
 }
 
 func (s *APITestSuite) TestDeleteURL() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
+	server := NewServer(s.redirectServeEndpoint, s.mockShortener, s.mockRedirect, s.mockConv)
 
 	id := int64(12345)
 	urlID := "12345"
@@ -215,7 +221,7 @@ func (s *APITestSuite) TestDeleteURL() {
 }
 
 func (s *APITestSuite) TestDeleteURL_withShortenerError() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
+	server := NewServer(s.redirectServeEndpoint, s.mockShortener, s.mockRedirect, s.mockConv)
 
 	testCases := []struct {
 		id           int64
@@ -259,7 +265,7 @@ func (s *APITestSuite) TestDeleteURL_withShortenerError() {
 }
 
 func (s *APITestSuite) TestDeleteURL_withConvertError() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
+	server := NewServer(s.redirectServeEndpoint, s.mockShortener, s.mockRedirect, s.mockConv)
 
 	urlID := "12345"
 
@@ -280,7 +286,7 @@ func (s *APITestSuite) TestDeleteURL_withConvertError() {
 }
 
 func (s *APITestSuite) TestRedirectURL() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
+	server := NewServer(s.redirectServeEndpoint, s.mockShortener, s.mockRedirect, s.mockConv)
 
 	id := int64(12345)
 	urlID := "12345"
@@ -306,7 +312,7 @@ func (s *APITestSuite) TestRedirectURL() {
 }
 
 func (s *APITestSuite) TestRedirectURL_withRedirectError() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
+	server := NewServer(s.redirectServeEndpoint, s.mockShortener, s.mockRedirect, s.mockConv)
 
 	testCases := []struct {
 		id          int64
@@ -355,7 +361,7 @@ func (s *APITestSuite) TestRedirectURL_withRedirectError() {
 }
 
 func (s *APITestSuite) TestRedirectURL_withConvertError() {
-	server := NewServer(s.hostname, s.mockShortener, s.mockRedirect, s.mockConv)
+	server := NewServer(s.redirectServeEndpoint, s.mockShortener, s.mockRedirect, s.mockConv)
 
 	urlID := "12345"
 	s.mockConv.
