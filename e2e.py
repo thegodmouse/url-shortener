@@ -1,5 +1,5 @@
-import argparse
 import datetime
+import os
 import unittest
 from datetime import timezone
 from http import HTTPStatus
@@ -13,10 +13,8 @@ def make_timestamp_from_now(delta_seconds):
 
 
 class End2EndTest(unittest.TestCase):
-    ENDPOINT = 'http://localhost'
-
     def setUp(self) -> None:
-        self.endpoint = 'http://localhost'
+        self.endpoint = os.environ.get('SHORTENER_E2E_ENDPOINT', 'http://localhost')
         self.urlV1APIBasePath = '/api/v1/urls'
         self.redirectAPIBasePath = '/'
 
@@ -81,11 +79,4 @@ class End2EndTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--endpoint', default='http://localhost')
-
-    args = parser.parse_args()
-
-    End2EndTest.ENDPOINT = End2EndTest
-
     unittest.main()

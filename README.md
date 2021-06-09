@@ -9,7 +9,7 @@
     - Deletes an existed URL.
 
 - `GET /<url_id>`
-    - Redirect URL with `<url_id> `to its original URL created by `POST /api/v1/urls`.
+    - Redirect URL with `<url_id>` to its original URL created by `POST /api/v1/urls`.
 
 ## Development Environments:
 
@@ -18,7 +18,7 @@
 - Golang (1.16.3)
     - required for building and running server
 
-- Docker (20.10.6):
+- Docker Engine (20.10.6), docker-compose (1.29.1):
     - required for running standalone url-shortener server with local cache and database
 
 - Python (3.8):
@@ -49,6 +49,8 @@ docker-compose up
 ```shell
 docker-compose ps
 ```
+
+- example output (mysql and redis are both in healthy state)
 
 ```shell
           Name                         Command                  State                    Ports
@@ -115,5 +117,5 @@ pip3 install -r requirements.txt
 Run the python script `e2e.py` in the project root directory. The default endpoint for testing is `http://localhost`.
 
 ```shell
-python3 e2e.py
+SHORTENER_E2E_ENDPOINT='http://localhost' python3 e2e.py
 ```
