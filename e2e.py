@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import unittest
 from datetime import timezone
@@ -12,6 +13,8 @@ def make_timestamp_from_now(delta_seconds):
 
 
 class End2EndTest(unittest.TestCase):
+    ENDPOINT = 'http://localhost'
+
     def setUp(self) -> None:
         self.endpoint = 'http://localhost'
         self.urlV1APIBasePath = '/api/v1/urls'
@@ -75,3 +78,14 @@ class End2EndTest(unittest.TestCase):
         # delete the url
         resp = requests.delete('{}{}/{}'.format(self.endpoint, self.urlV1APIBasePath, url_id))
         self.assertEqual(HTTPStatus.NO_CONTENT, resp.status_code)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--endpoint', default='http://localhost')
+
+    args = parser.parse_args()
+
+    End2EndTest.ENDPOINT = End2EndTest
+
+    unittest.main()
