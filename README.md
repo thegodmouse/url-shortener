@@ -44,6 +44,11 @@ docker build -t ${URL_SHORTENER_IMAGE} .
   for `url_shortener`
 
 ```shell
+# this line will make docker-compose to expose url_shortener server at port 16000
+expor EXTERNAL_SERVER_PORT=16000
+# NOTE: you need to set external ip or hostname to make redirect API available to serve remotely
+export REDIRECT_SERVE_ENDPOINT=http://localhost:16000
+
 docker-compose up
 ```
 
@@ -95,6 +100,8 @@ chmod +x build.sh start.sh
 ```shell
 # this line will make url_shortener server listen at :16000
 export SERVER_PORT=16000
+# NOTE: you need to set external ip or hostname to make redirect API available to serve remotely
+export REDIRECT_SERVE_ENDPOINT=http://localhost:16000
 
 ./build.sh && ./start.sh
 ```
