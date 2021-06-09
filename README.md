@@ -35,22 +35,24 @@
 - Go to the project root directory, and build the docker image for `url_shortener`
 
 ```shell
-docker build -t url_shortener .
+URL_SHORTENER_IMAGE=url_shortener:demo
+
+docker build -t ${URL_SHORTENER_IMAGE} .
 ```
 
-- Start the docker-compose
+- Start the docker-compose, and it will use environment variable `URL_SHORTENER_IMAGE` as the image name for `url_shortener`
 
 ```shell
-docker-compose up 
+docker-compose up
 ```
 
-- Wait for state of servers to be `(healthy)`
+- Wait for state of `mysql` and `redis` server to be `Up (healthy)`
 
 ```shell
 docker-compose ps
 ```
 
-- example output (mysql and redis are both in healthy state)
+- example output (`mysql` and `redis` are both in healthy state)
 
 ```shell
           Name                         Command                  State                    Ports
@@ -90,6 +92,9 @@ chmod +x build.sh start.sh
   configurations [here](#How-to-configure).
 
 ```shell
+# this line will make url_shortener server listen at :16000
+export SERVER_PORT=16000
+
 ./build.sh && ./start.sh
 ```
 
@@ -97,12 +102,17 @@ chmod +x build.sh start.sh
 
 ### The server can be configured by passing environment variables to it.
 
-- `SERVER_PORT`: server listen port for `url_shortener` (default: `80`)
-- `REDIRECT_SERVE_URL`: url to serve redirect api (default: `http://localhost`)
-- `MYSQL_SERVER_ADDR`: mysql server addr (default: `localhost:3306`)
-- `MYSQL_SERVER_ROOT_PASSWORD`: root password for connecting mysql server (default: `''`)
-- `REDIS_SERVER_ADDR`: redis server addr (default: `localhost:6379`)
-- `REDIS_SERVER_ADMIN_PASSWORD`: redis server admin password (default: `''`)
+- `SERVER_PORT` : server listen port for `url_shortener` (default: `80`)
+- `REDIRECT_SERVE_ENDPOINT` : endpoint to serve redirect api (default: `http://localhost`)
+- `MYSQL_SERVER_ADDR` : mysql server addr (default: `localhost:3306`)
+- `MYSQL_SERVER_ROOT_PASSWORD` : root password for connecting mysql server (default: `''`)
+- `REDIS_SERVER_ADDR` : redis server addr (default: `localhost:6379`)
+- `REDIS_SERVER_ADMIN_PASSWORD` : redis server admin password (default: `''`)
+
+### For standalone docker-compose environment, there are additional environment variables:
+
+- `URL_SHORTENER_IMAGE` : image name for `url_shortener` docker (default: `url_shortener`)
+- `EXTERNAL_SERVER_PORT` : external server port for publishing internal `SERVER_PORT` (default: `80`)
 
 ## How to run end-to-end tests
 
