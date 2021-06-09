@@ -105,6 +105,18 @@ func (s *APITestSuite) TestCreateURL_withBadRequest() {
 				"unknown-format-expireAt",
 			),
 		},
+		{
+			body: s.makeTestCreateURLRequestBody(
+				"a/b/c",
+				time.Now().Add(time.Minute).Format(time.RFC3339),
+			),
+		},
+		{
+			body: s.makeTestCreateURLRequestBody(
+				"://b",
+				time.Now().Add(time.Minute).Format(time.RFC3339),
+			),
+		},
 	}
 	for _, testCase := range testCases {
 		// create test context

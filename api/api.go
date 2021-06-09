@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -69,6 +70,11 @@ func (s *Server) createURL(ctx *gin.Context) {
 	if expireAt.Before(time.Now()) {
 		log.Errorf("createURL: expireAt was expired, expireAt: %v", expireAt)
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "expireAt is in the past"})
+		return
+	}
+	if _, err := url.ParseRequestURI(createURLRequest.URL); err != nil {
+		log.Errorf("createURL: parse request url err: %v, request: %+v", err, createURLRequest)
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid url format"})
 		return
 	}
 	var id int64
