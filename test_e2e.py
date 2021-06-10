@@ -104,7 +104,7 @@ class TestEnd2End(unittest.TestCase):
         self.assertEqual(HTTPStatus.NOT_FOUND, resp.status_code)
 
         # sleep to ensure the url_id is recycled
-        time.sleep(self.check_expiration_interval + 5)
+        time.sleep(int(self.check_expiration_interval) + 5)
 
         resp = self.create_short_url('https://www.google.com', delta_now)
         self.assertEqual(HTTPStatus.OK, resp.status_code)
@@ -129,7 +129,7 @@ class TestEnd2End(unittest.TestCase):
 
             self.assertEqual(64, len(url_ids))
 
-            #[self.delete_short_urL(url_id) for url_id in url_ids]
+            [self.delete_short_urL(url_id) for url_id in url_ids]
 
     def test_redirect_not_exist(self):
         # use redirect short url API
