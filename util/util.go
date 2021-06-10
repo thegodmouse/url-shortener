@@ -31,6 +31,14 @@ func IsRecordDeleted(shortURL *record.ShortURL) bool {
 	return shortURL.IsDeleted
 }
 
+// IsRecordNotExist checks if the given record is not exist.
+func IsRecordNotExist(shortURL *record.ShortURL) bool {
+	if shortURL == nil {
+		return true
+	}
+	return shortURL.IsNotExist
+}
+
 // DeleteExpiredURLs is an infinite loop for periodically checking whether there is any expired record in database.
 func DeleteExpiredURLs(ctx context.Context, dbStore db.Store, interval time.Duration) <-chan bool {
 	log.Infof("DeleteExpiredURLs: check expired records with interval: %v", interval)

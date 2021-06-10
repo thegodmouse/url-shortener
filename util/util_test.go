@@ -113,6 +113,59 @@ func TestIsRecordExpired(t *testing.T) {
 	}
 }
 
+func TestIsRecordNotExist(t *testing.T) {
+
+	testCases := []struct {
+		shortURL *record.ShortURL
+		expBool  bool
+	}{
+		{
+			shortURL: nil,
+			expBool:  true,
+		},
+		{
+			shortURL: &record.ShortURL{
+				ID:         int64(123),
+				IsNotExist: true,
+			},
+			expBool: true,
+		},
+		{
+			shortURL: &record.ShortURL{
+				ID:        int64(123),
+				CreatedAt: time.Now().Add(-time.Minute),
+				ExpireAt:  time.Now().Add(time.Minute),
+				URL:       "http://localhost:5678",
+				IsDeleted: false,
+			},
+			expBool: false,
+		},
+		{
+			shortURL: &record.ShortURL{
+				ID:        int64(123),
+				CreatedAt: time.Now().Add(-2 * time.Minute),
+				ExpireAt:  time.Now().Add(-time.Minute),
+				URL:       "http://localhost:5678",
+				IsDeleted: false,
+			},
+			expBool: false,
+		},
+		{
+			shortURL: &record.ShortURL{
+				ID:        int64(123),
+				CreatedAt: time.Now().Add(-time.Minute),
+				ExpireAt:  time.Now().Add(time.Minute),
+				URL:       "http://localhost:5678",
+				IsDeleted: true,
+			},
+			expBool: false,
+		},
+	}
+	for _, testCase := range testCases {
+		assert.Equal(t, testCase.expBool, IsRecordNotExist(testCase.shortURL))
+	}
+}
+
 type DeleteExpiredURLsTestSuite struct {
 	suite.Suite
 

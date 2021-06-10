@@ -7,11 +7,12 @@ import (
 
 // ShortURL is a record for storing the information of a short url.
 type ShortURL struct {
-	ID        int64
-	CreatedAt time.Time
-	ExpireAt  time.Time
-	URL       string
-	IsDeleted bool
+	ID         int64
+	CreatedAt  time.Time
+	ExpireAt   time.Time
+	URL        string
+	IsDeleted  bool
+	IsNotExist bool
 }
 
 // MarshalBinary marshals the record to binary data in json format.

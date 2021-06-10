@@ -175,6 +175,35 @@ func (s *RedirectTestSuite) TestRedirectTo_withURLNotFound() {
 		EXPECT().
 		Get(gomock.Any(), gomock.Eq(id)).
 		Return(nil, db.ErrNoRows)
+	s.mockCache.
+		EXPECT().
+		Set(gomock.Any(), gomock.Eq(id), recordMatcher{shortURL: &record.ShortURL{ID: id, IsNotExist: true}}).
+		Return(nil)
+
+	// SUT
+	gotURL, gotErr := srv.RedirectTo(context.Background(), id)
+
+	s.Error(gotErr)
+	s.Empty(gotURL)
+}
+
+func (s *RedirectTestSuite) TestRedirectTo_withURLNotFound_andCacheError() {
+	srv := NewService(s.mockDB, s.mockCache)
+
+	id := int64(54321)
+
+	s.mockCache.
+		EXPECT().
+		Get(gomock.Any(), gomock.Eq(id)).
+		Return(nil, cache.ErrKeyNotFound)
+	s.mockDB.
+		EXPECT().
+		Get(gomock.Any(), gomock.Eq(id)).
+		Return(nil, db.ErrNoRows)
+	s.mockCache.
+		EXPECT().
+		Set(gomock.Any(), gomock.Eq(id), recordMatcher{shortURL: &record.ShortURL{ID: id, IsNotExist: true}}).
+		Return(errors.New("unknown cache error"))
 
 	// SUT
 	gotURL, gotErr := srv.RedirectTo(context.Background(), id)
@@ -233,6 +262,27 @@ func (s *RedirectTestSuite) TestRedirectTo_withRecordExpired() {
 	s.Empty(gotURL)
 }
 
+func (s *RedirectTestSuite) TestRedirectTo_withRecordNotExist() {
+	srv := NewService(s.mockDB, s.mockCache)
+
+	id := int64(54321)
+	shortURL := &record.ShortURL{
+		ID:         id,
+		IsNotExist: true,
+	}
+
+	s.mockCache.
+		EXPECT().
+		Get(gomock.Any(), gomock.Eq(id)).
+		Return(shortURL, nil)
+
+	// SUT
+	gotURL, gotErr := srv.RedirectTo(context.Background(), id)
+
+	s.Error(gotErr)
+	s.Empty(gotURL)
+}
+
 type recordMatcher struct {
 	shortURL *record.ShortURL
 }
@@ -244,6 +294,8 @@ func (m recordMatcher) Matches(x interface{}) bool {
 	}
 	return m.shortURL.ID == shortURL.ID &&
 		m.shortURL.URL == shortURL.URL &&
+		m.shortURL.IsDeleted == shortURL.IsDeleted &&
+		m.shortURL.IsNotExist == shortURL.IsNotExist &&
 		m.shortURL.ExpireAt.Equal(shortURL.ExpireAt) &&
 		m.shortURL.CreatedAt.Equal(shortURL.CreatedAt)
 }

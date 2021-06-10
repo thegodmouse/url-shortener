@@ -45,9 +45,9 @@ func (s *serviceImpl) Delete(ctx context.Context, id int64) error {
 	shortURL, err := s.cacheStore.Get(ctx, id)
 	if err != nil {
 		log.Errorf("shortener.Delete: cache store get err: %v, with id: %v", err, id)
-	} else if util.IsRecordDeleted(shortURL) {
-		// found in the cache, and the record is deleted.
-		log.Infof("shortener.Delete: record is already deleted with id: %v", id)
+	} else if util.IsRecordDeleted(shortURL) || util.IsRecordNotExist(shortURL) {
+		// found in the cache, and the record is deleted or not exist.
+		log.Infof("shortener.Delete: record is not available for id: %v", id)
 		return nil
 	}
 	// the record is either not exist in the cache or not deleted, directly delete it in the database.

@@ -16,8 +16,8 @@ def make_timestamp_from_now(delta_seconds):
 
 class TestEnd2End(unittest.TestCase):
     def setUp(self) -> None:
-        self.endpoint = os.environ.get('SHORTENER_E2E_ENDPOINT', 'http://localhost:15000')
-        self.check_expiration_interval = os.environ.get('CHECK_EXPIRATION_INTERVAL', 10)
+        self.endpoint = os.environ.get('SHORTENER_E2E_ENDPOINT', 'http://localhost')
+        self.check_expiration_interval = os.environ.get('CHECK_EXPIRATION_INTERVAL', 60)
         self.url_v1_api_base_path = '/api/v1/urls'
         self.redirect_api_base_path = '/'
 
@@ -114,7 +114,7 @@ class TestEnd2End(unittest.TestCase):
         resp = requests.delete('{}{}/{}'.format(self.endpoint, self.url_v1_api_base_path, url_id))
         self.assertEqual(HTTPStatus.NO_CONTENT, resp.status_code)
 
-    def test_create_async(self):
+    def test_create_multiple_async(self):
         url = '{}{}'.format(self.endpoint, self.url_v1_api_base_path)
         data = {'url': 'https://www.google.com', 'expireAt': make_timestamp_from_now(3600)}
         with ThreadPoolExecutor(max_workers=8) as executor:
@@ -136,7 +136,6 @@ class TestEnd2End(unittest.TestCase):
         resp = self.redirect_short_url("0")
         # check response after redirect
         self.assertEqual(HTTPStatus.NOT_FOUND, resp.status_code)
-        pass
 
 
 if __name__ == '__main__':

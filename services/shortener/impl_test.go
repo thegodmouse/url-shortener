@@ -237,6 +237,27 @@ func (s *ShortenerTestSuite) TestDelete_withRecordDeleted() {
 	s.NoError(gotErr)
 }
 
+func (s *ShortenerTestSuite) TestDelete_withRecordNotExist() {
+	srv := NewService(s.dbStore, s.cacheStore)
+
+	id := int64(12345)
+
+	shortURL := &record.ShortURL{
+		ID:         id,
+		IsNotExist: true,
+	}
+
+	s.cacheStore.
+		EXPECT().
+		Get(gomock.Any(), gomock.Eq(id)).
+		Return(shortURL, nil)
+
+	// SUT
+	gotErr := srv.Delete(context.Background(), id)
+
+	s.NoError(gotErr)
+}
+
 type recordMatcher struct {
 	shortURL *record.ShortURL
 }

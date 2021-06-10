@@ -2,6 +2,7 @@ package redirect
 
 import (
 	"context"
+	"database/sql"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/thegodmouse/url-shortener/cache"
@@ -28,6 +29,11 @@ func (s *serviceImpl) RedirectTo(ctx context.Context, id int64) (string, error) 
 	shortURL, isCached, err := s.getShortURL(ctx, id)
 	if err != nil {
 		log.Errorf("redirect.RedirectTo: get short url record err: %v, with id: %v", err, id)
+		if err == sql.ErrNoRows {
+			if err := s.cacheStore.Set(ctx, id, &record.ShortURL{ID: id, IsNotExist: true}); err != nil {
+				log.Errorf("redirect.RedirectTo: cahce store set err: %v, with id: %v", err, id)
+			}
+		}
 		return "", err
 	}
 	if !isCached {
@@ -37,8 +43,8 @@ func (s *serviceImpl) RedirectTo(ctx context.Context, id int64) (string, error) 
 		}
 	}
 	// check if the record is expired or deleted
-	if util.IsRecordExpired(shortURL) || util.IsRecordDeleted(shortURL) {
-		log.Errorf("redirect.RedirectTo: short url is expired or deleted, url record: %+v", shortURL)
+	if util.IsRecordExpired(shortURL) || util.IsRecordDeleted(shortURL) || util.IsRecordNotExist(shortURL) {
+		log.Errorf("redirect.RedirectTo: short url is unavailable, url record: %+v", shortURL)
 		return "", util.ErrURLNotFound
 	}
 	log.Infof("redirect.RedirectTo: successfully get the original url from the record: %v, with id: %v", shortURL, id)

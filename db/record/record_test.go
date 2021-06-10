@@ -9,11 +9,12 @@ import (
 
 func TestRecord(t *testing.T) {
 	r1 := &ShortURL{
-		ID:        123,
-		CreatedAt: time.Now().Add(-time.Hour).Round(time.Second),
-		ExpireAt:  time.Now().Add(time.Hour).Round(time.Second),
-		URL:       "http://localhost:23456",
-		IsDeleted: false,
+		ID:         123,
+		CreatedAt:  time.Now().Add(-time.Hour).Round(time.Second),
+		ExpireAt:   time.Now().Add(time.Hour).Round(time.Second),
+		URL:        "http://localhost:23456",
+		IsDeleted:  true,
+		IsNotExist: false,
 	}
 
 	// SUT

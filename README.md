@@ -11,6 +11,16 @@
 - `GET /<url_id>`
     - Redirect URL with `<url_id>` to its original URL created by `POST /api/v1/urls`.
 
+## Features and supported functionality:
+
+- Default generated `url_id` is a string converted from a unique integer id starting from one.
+  - can be extended to any string that is convertible back to the id.
+
+- Recycle expired and deleted URLs 
+  - recycle for expired URLs is not realtime
+
+- Basic end-to-end tests
+
 ## Development Environments:
 
 - Ubuntu (18.04)
