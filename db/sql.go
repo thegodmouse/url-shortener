@@ -38,7 +38,7 @@ func (s *sqlStore) Create(ctx context.Context, url string, expireAt time.Time) (
 	}
 	defer tx.Rollback()
 
-	row := tx.QueryRow("SELECT id FROM url_shortener.recyclable_urls LIMIT 1 FOR UPDATE")
+	row := tx.QueryRow("SELECT id FROM url_shortener.recyclable_urls LIMIT 1 FOR UPDATE SKIP LOCKED")
 	err = row.Scan(&id)
 	if err == nil {
 		// recycle urls from recyclable_urls table

@@ -46,7 +46,7 @@ func (s *SQLTestSuite) TestCreate() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE SKIP LOCKED").
 		WillReturnError(sql.ErrNoRows)
 	s.mock.
 		ExpectExec("INSERT INTO url_shortener.short_urls \\(url, expire_at\\) VALUES \\(\\?, \\?\\)").
@@ -75,7 +75,7 @@ func (s *SQLTestSuite) TestCreate_withRecyclableURL() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE SKIP LOCKED").
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(id))
 	s.mock.
 		ExpectExec(
@@ -129,7 +129,7 @@ func (s *SQLTestSuite) TestCreate_withQueryRecyclableError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE SKIP LOCKED").
 		WillReturnError(errors.New("unknown query error"))
 	s.mock.
 		ExpectExec("INSERT INTO url_shortener.short_urls \\(url, expire_at\\) VALUES \\(\\?, \\?\\)").
@@ -159,7 +159,7 @@ func (s *SQLTestSuite) TestCreate_withDeleteRecyclableError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE SKIP LOCKED").
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(id))
 	s.mock.
 		ExpectExec(
@@ -187,7 +187,7 @@ func (s *SQLTestSuite) TestCreate_withUpdateShortError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE SKIP LOCKED").
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(id))
 	s.mock.
 		ExpectExec(
@@ -219,7 +219,7 @@ func (s *SQLTestSuite) TestCreate_withInsertShortError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE SKIP LOCKED").
 		WillReturnError(sql.ErrNoRows)
 	s.mock.
 		ExpectExec("INSERT INTO url_shortener.short_urls \\(url, expire_at\\) VALUES \\(\\?, \\?\\)").
@@ -244,7 +244,7 @@ func (s *SQLTestSuite) TestCreate_withGetLastInsertIDError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE SKIP LOCKED").
 		WillReturnError(sql.ErrNoRows)
 	s.mock.
 		ExpectExec("INSERT INTO url_shortener.short_urls \\(url, expire_at\\) VALUES \\(\\?, \\?\\)").
@@ -269,7 +269,7 @@ func (s *SQLTestSuite) TestCreate_withCommitError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls LIMIT 1 FOR UPDATE SKIP LOCKED").
 		WillReturnError(sql.ErrNoRows)
 	s.mock.
 		ExpectExec("INSERT INTO url_shortener.short_urls \\(url, expire_at\\) VALUES \\(\\?, \\?\\)").
@@ -569,6 +569,25 @@ func (s *SQLTestSuite) TestExpire() {
 	s.NoError(gotErr)
 }
 
+func (s *SQLTestSuite) TestExpire_withError() {
+	sqlStore := NewSQLStore(s.db)
+
+	id := int64(12345)
+
+	s.mock.
+		ExpectBegin()
+	s.mock.
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\? FOR UPDATE").
+		WithArgs(id).
+		WillReturnError(errors.New("unknown query error"))
+	s.mock.
+		ExpectRollback()
+	// SUT
+	gotErr := sqlStore.Expire(context.Background(), id)
+
+	s.Error(gotErr)
+}
+
 func (s *SQLTestSuite) TestGetExpiredIDs() {
 	sqlStore := NewSQLStore(s.db)
 
@@ -609,7 +628,7 @@ func (s *SQLTestSuite) TestGetExpiredIDs_withQueryError() {
 	s.Nil(gotCh)
 }
 
-func (s *SQLTestSuite) TestGetExpiredIDs_withScanError() {
+func (s *SQLTestSuite) TestGetExpiredIDs_withRowsError() {
 	sqlStore := NewSQLStore(s.db)
 
 	expRows := sqlmock.NewRows([]string{"id"}).
@@ -634,4 +653,26 @@ func (s *SQLTestSuite) TestGetExpiredIDs_withScanError() {
 	s.Contains(result, int64(2))
 	s.NotContains(result, int64(3))
 	s.Len(result, 2)
+}
+
+func (s *SQLTestSuite) TestGetExpiredIDs_withScanError() {
+	sqlStore := NewSQLStore(s.db)
+
+	expRows := sqlmock.NewRows([]string{"id"}).
+		AddRow(int64(1)).
+		AddRow("invalid-id")
+
+	s.mock.
+		ExpectQuery("SELECT id FROM url_shortener.short_urls WHERE expire_at < \\? AND is_deleted = false").
+		WithArgs(sqlmock.AnyArg()).
+		WillReturnRows(expRows)
+
+	gotCh, gotErr := sqlStore.GetExpiredIDs(context.Background())
+
+	s.NoError(gotErr)
+	var result []int64
+	for id := range gotCh {
+		result = append(result, id)
+	}
+	s.Len(result, 1)
 }
