@@ -14,10 +14,10 @@
 ## Features and supported functionality:
 
 - Default generated `url_id` is a string converted from a unique integer id starting from one.
-  - can be extended to any string that is convertible back to the id.
+    - can be extended to any string that is convertible back to the id.
 
-- Recycle expired and deleted URLs 
-  - recycle for expired URLs is not realtime
+- Recycle expired and deleted URLs
+    - recycle for expired URLs is not realtime
 
 - Basic end-to-end tests
 
@@ -143,7 +143,8 @@ Install required python packages.
 pip3 install -r requirements.txt
 ```
 
-Run the python script `e2e.py` in the project root directory. The default endpoint for testing is `http://localhost`.
+Run the python script `test_e2e.py` in the project root directory. The default endpoint for testing
+is `http://localhost`.
 
 ```shell
 export CHECK_EXPIRATION_INTERVAL=${CHECK_EXPIRATION_INTERVAL} 
