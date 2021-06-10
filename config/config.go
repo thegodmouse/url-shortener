@@ -1,6 +1,8 @@
 package config
 
-import "flag"
+import (
+	"flag"
+)
 
 var (
 	// ServerPort is the port that url_shortener server serves at.
@@ -17,4 +19,7 @@ var (
 	RedisServerAddr = flag.String("redis_server_addr", "localhost:6379", "redis server addr")
 	// RedisAdminPassword is the password for admin user on the redis server.
 	RedisAdminPassword = flag.String("redis_server_admin_password", "", "redis server admin password")
+
+	// CheckExpirationInterval is the time interval in seconds for server to check expired records.
+	CheckExpirationInterval = flag.Int64("check_expiration_interval", 60, "time interval in seconds to check expired records")
 )

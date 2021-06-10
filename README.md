@@ -45,7 +45,7 @@ docker build -t ${URL_SHORTENER_IMAGE} .
 
 ```shell
 # this line will make docker-compose to expose url_shortener server at port 16000
-expor EXTERNAL_SERVER_PORT=16000
+export EXTERNAL_SERVER_PORT=16000
 # NOTE: you need to set external ip or hostname to make redirect API available to serve remotely
 export REDIRECT_SERVE_ENDPOINT=http://localhost:16000
 
@@ -116,6 +116,7 @@ export REDIRECT_SERVE_ENDPOINT=http://localhost:16000
 - `MYSQL_SERVER_ROOT_PASSWORD` : root password for connecting mysql server (default: `''`)
 - `REDIS_SERVER_ADDR` : redis server addr (default: `localhost:6379`)
 - `REDIS_SERVER_ADMIN_PASSWORD` : redis server admin password (default: `''`)
+- `CHECK_EXPIRATION_INTERVAL` : time interval in seconds to check expired records (default: 60)
 
 ### For standalone docker-compose environment, there are additional environment variables:
 
@@ -135,5 +136,8 @@ pip3 install -r requirements.txt
 Run the python script `e2e.py` in the project root directory. The default endpoint for testing is `http://localhost`.
 
 ```shell
-SHORTENER_E2E_ENDPOINT='http://localhost' python3 e2e.py
+export CHECK_EXPIRATION_INTERVAL=${CHECK_EXPIRATION_INTERVAL} 
+export SHORTENER_E2E_ENDPOINT=${REDIRECT_SERVE_ENDPOINT}
+
+python3 test_e2e.py
 ```

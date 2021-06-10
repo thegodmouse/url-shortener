@@ -38,7 +38,7 @@ func (s *sqlStore) Create(ctx context.Context, url string, expireAt time.Time) (
 	}
 	defer tx.Rollback()
 
-	row := tx.QueryRow("SELECT id FROM url_shortener.recyclable_urls LIMIT 1")
+	row := tx.QueryRow("SELECT id FROM url_shortener.recyclable_urls LIMIT 1 FOR UPDATE")
 	err = row.Scan(&id)
 	if err == nil {
 		// recycle urls from recyclable_urls table
@@ -101,7 +101,7 @@ func (s *sqlStore) Get(ctx context.Context, id int64) (*record.ShortURL, error) 
 // GetExpiredIDs returns a channel for reading expired ids.
 func (s *sqlStore) GetExpiredIDs(ctx context.Context) (<-chan int64, error) {
 	now := time.Now().Round(time.Second)
-	rows, err := s.db.QueryContext(ctx, "SELECT id FROM url_shortener.short_urls WHERE expire_at < ?", now)
+	rows, err := s.db.QueryContext(ctx, "SELECT id FROM url_shortener.short_urls WHERE expire_at < ? AND is_deleted = false", now)
 	if err != nil {
 		log.Errorf("sqlStore.GetExpiredIDs: query expired ids err: %v", err)
 		return nil, err
@@ -154,7 +154,7 @@ func (s *sqlStore) delete(ctx context.Context, id int64, onExpire bool) error {
 	}
 	defer tx.Rollback()
 
-	row := tx.QueryRow("SELECT id FROM url_shortener.recyclable_urls WHERE id = ?", id)
+	row := tx.QueryRow("SELECT id FROM url_shortener.recyclable_urls WHERE id = ? FOR UPDATE", id)
 	var recyclableID int64
 	err = row.Scan(&recyclableID)
 	if err == nil {
@@ -167,10 +167,10 @@ func (s *sqlStore) delete(ctx context.Context, id int64, onExpire bool) error {
 	}
 
 	if onExpire {
-		row = tx.QueryRow("SELECT id FROM url_shortener.short_urls WHERE id = ? AND expire_at < ?",
+		row = tx.QueryRow("SELECT id FROM url_shortener.short_urls WHERE id = ? AND expire_at < ? FOR UPDATE",
 			id, time.Now().Round(time.Second))
 	} else {
-		row = tx.QueryRow("SELECT id FROM url_shortener.short_urls WHERE id = ?", id)
+		row = tx.QueryRow("SELECT id FROM url_shortener.short_urls WHERE id = ? FOR UPDATE", id)
 	}
 
 	var shortID int64

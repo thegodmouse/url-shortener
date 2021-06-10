@@ -51,7 +51,7 @@ func main() {
 
 	// start checking for expire short urls
 	ctx, cancel := context.WithCancel(context.Background())
-	done := util.DeleteExpiredURLs(ctx, dbStore, 10*time.Minute)
+	done := util.DeleteExpiredURLs(ctx, dbStore, time.Duration(*config.CheckExpirationInterval)*time.Second)
 
 	// start serving server
 	if err := server.Serve(":" + *config.ServerPort); err != nil {
