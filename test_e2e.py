@@ -126,10 +126,13 @@ class TestEnd2End(unittest.TestCase):
                 self.assertEqual(200, resp.status_code)
                 url_id = resp.json()['id']
                 url_ids.add(url_id)
-
             self.assertEqual(64, len(url_ids))
 
-            [self.delete_short_urL(url_id) for url_id in url_ids]
+            results = [executor.submit(self.delete_short_urL, url_id) for url_id in url_ids]
+
+            for result in results:
+                resp = result.result()
+                self.assertEqual(204, resp.status_code)
 
     def test_redirect_not_exist(self):
         # use redirect short url API

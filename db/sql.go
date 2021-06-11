@@ -154,7 +154,7 @@ func (s *sqlStore) delete(ctx context.Context, id int64, onExpire bool) error {
 	}
 	defer tx.Rollback()
 
-	row := tx.QueryRow("SELECT id FROM url_shortener.recyclable_urls WHERE id = ? FOR UPDATE", id)
+	row := tx.QueryRow("SELECT id FROM url_shortener.recyclable_urls WHERE id = ?", id)
 	var recyclableID int64
 	err = row.Scan(&recyclableID)
 	if err == nil {

@@ -340,7 +340,7 @@ func (s *SQLTestSuite) TestDelete() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\? FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(sql.ErrNoRows)
 	s.mock.
@@ -372,7 +372,7 @@ func (s *SQLTestSuite) TestDelete_withAlreadyDeleted() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\? FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnRows(expRows)
 	s.mock.
@@ -407,7 +407,7 @@ func (s *SQLTestSuite) TestDelete_withQueryRecyclableError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\? FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(errors.New("unknown query error"))
 	s.mock.
@@ -427,11 +427,11 @@ func (s *SQLTestSuite) TestDelete_withQueryShortError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\? FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(sql.ErrNoRows)
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.short_urls WHERE id = \\? FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.short_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(errors.New("unknown query error"))
 	s.mock.
@@ -451,7 +451,7 @@ func (s *SQLTestSuite) TestDelete_withUpdateShortError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\? FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(sql.ErrNoRows)
 	s.mock.
@@ -479,7 +479,7 @@ func (s *SQLTestSuite) TestDelete_withInsertRecyclableError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\? FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(sql.ErrNoRows)
 	s.mock.
@@ -511,7 +511,7 @@ func (s *SQLTestSuite) TestDelete_withCommitError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\? FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(sql.ErrNoRows)
 	s.mock.
@@ -546,7 +546,7 @@ func (s *SQLTestSuite) TestExpire() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\? FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(sql.ErrNoRows)
 	s.mock.
@@ -577,7 +577,7 @@ func (s *SQLTestSuite) TestExpire_withError() {
 	s.mock.
 		ExpectBegin()
 	s.mock.
-		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\? FOR UPDATE").
+		ExpectQuery("SELECT id FROM url_shortener\\.recyclable_urls WHERE id = \\?").
 		WithArgs(id).
 		WillReturnError(errors.New("unknown query error"))
 	s.mock.
