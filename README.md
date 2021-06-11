@@ -147,7 +147,9 @@ Run the python script `test_e2e.py` in the project root directory. The default e
 is `http://localhost`.
 
 ```shell
-export CHECK_EXPIRATION_INTERVAL=${CHECK_EXPIRATION_INTERVAL} 
+export CHECK_EXPIRATION_INTERVAL=${CHECK_EXPIRATION_INTERVAL}
+# SHORTENER_E2E_ENDPOINT is the endpoint of the url-shortener server that we want to tested
+# In most cases, it should be the same as the endpoint for serving redirect API.
 export SHORTENER_E2E_ENDPOINT=${REDIRECT_SERVE_ENDPOINT}
 
 python3 test_e2e.py
