@@ -53,6 +53,11 @@ func (s *serviceImpl) Delete(ctx context.Context, id int64) error {
 	// the record is either not exist in the cache or not deleted, directly delete it in the database.
 	if err := s.dbStore.Delete(ctx, id); err != nil {
 		log.Errorf("shortener.Delete: db store delete err: %v, with id: %v", err, id)
+		if err == db.ErrNoRows {
+			if err := s.cacheStore.Set(ctx, id, &record.ShortURL{ID: id, IsNotExist: true}); err != nil {
+				log.Errorf("shortener.Delete: cahce store set err: %v, with id: %v", err, id)
+			}
+		}
 		return err
 	}
 	// set record as deleted in the cache for the next call

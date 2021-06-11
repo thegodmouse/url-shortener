@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/thegodmouse/url-shortener/cache"
 	mc "github.com/thegodmouse/url-shortener/cache/mock"
+	"github.com/thegodmouse/url-shortener/db"
 	md "github.com/thegodmouse/url-shortener/db/mock"
 	"github.com/thegodmouse/url-shortener/db/record"
 )
@@ -237,7 +238,7 @@ func (s *ShortenerTestSuite) TestDelete_withRecordDeleted() {
 	s.NoError(gotErr)
 }
 
-func (s *ShortenerTestSuite) TestDelete_withRecordNotExist() {
+func (s *ShortenerTestSuite) TestDelete_withRecordNotExist_andCacheHit() {
 	srv := NewService(s.dbStore, s.cacheStore)
 
 	id := int64(12345)
@@ -256,6 +257,54 @@ func (s *ShortenerTestSuite) TestDelete_withRecordNotExist() {
 	gotErr := srv.Delete(context.Background(), id)
 
 	s.NoError(gotErr)
+}
+
+func (s *ShortenerTestSuite) TestDelete_withRecordNotExist_andCacheMiss() {
+	srv := NewService(s.dbStore, s.cacheStore)
+
+	id := int64(12345)
+
+	s.cacheStore.
+		EXPECT().
+		Get(gomock.Any(), gomock.Eq(id)).
+		Return(nil, cache.ErrKeyNotFound)
+	s.dbStore.
+		EXPECT().
+		Delete(gomock.Any(), gomock.Eq(id)).
+		Return(db.ErrNoRows)
+	s.cacheStore.
+		EXPECT().
+		Set(gomock.Any(), gomock.Eq(id), &recordMatcher{shortURL: &record.ShortURL{ID: id, IsNotExist: true}}).
+		Return(nil)
+
+	// SUT
+	gotErr := srv.Delete(context.Background(), id)
+
+	s.Error(gotErr)
+}
+
+func (s *ShortenerTestSuite) TestDelete_withRecordNotExist_andCacheError() {
+	srv := NewService(s.dbStore, s.cacheStore)
+
+	id := int64(12345)
+
+	s.cacheStore.
+		EXPECT().
+		Get(gomock.Any(), gomock.Eq(id)).
+		Return(nil, cache.ErrKeyNotFound)
+	s.dbStore.
+		EXPECT().
+		Delete(gomock.Any(), gomock.Eq(id)).
+		Return(db.ErrNoRows)
+	s.cacheStore.
+		EXPECT().
+		Set(gomock.Any(), gomock.Eq(id), &recordMatcher{shortURL: &record.ShortURL{ID: id, IsNotExist: true}}).
+		Return(errors.New("unknown cache error"))
+
+	// SUT
+	gotErr := srv.Delete(context.Background(), id)
+
+	s.Error(gotErr)
 }
 
 type recordMatcher struct {
