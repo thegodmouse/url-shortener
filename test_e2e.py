@@ -97,7 +97,7 @@ class TestEnd2End(unittest.TestCase):
         url_id = resp.json()['id']
 
         # sleep to ensure the url_id is expired
-        time.sleep(delta_now + 1)
+        time.sleep(delta_now + 5)
 
         # should be expired
         resp = self.redirect_short_url(url_id)
