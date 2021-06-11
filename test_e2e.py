@@ -16,7 +16,7 @@ def make_timestamp_from_now(delta_seconds):
 
 class TestEnd2End(unittest.TestCase):
     def setUp(self) -> None:
-        self.endpoint = os.environ.get('SHORTENER_E2E_ENDPOINT', 'http://localhost:15000')
+        self.endpoint = os.environ.get('SHORTENER_E2E_ENDPOINT', 'http://localhost')
         self.check_expiration_interval = os.environ.get('CHECK_EXPIRATION_INTERVAL', 60)
         self.url_v1_api_base_path = '/api/v1/urls'
         self.redirect_api_base_path = '/'
